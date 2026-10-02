@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SanitasFlow - Pago</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="pago-cita">
+    <header class="site-header">
+        <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">✚</span>SanitasFlow</a>
+
+        <nav class="site-nav" aria-label="Navegación principal">
+            <a href="especialidades.html">Especialidades</a>
+            <a href="index.html#conocenos">Conócenos</a>
+            <a href="reservar-cita.html?especialidad=general&amp;procedimiento=gen-consulta">Cita general</a>
+        </nav>
+
+        <div class="header-actions" id="auth-slot"></div>
+    </header>
+
+    <main class="page-shell narrow-shell" id="pago-app">
+        <section class="panel summary-list" style="margin-bottom:18px;">
+            <h1 class="section-heading">Resumen de tu cita</h1>
+            <p><strong>Especialidad:</strong> <span id="resumen-especialidad">-</span></p>
+            <p><strong>Procedimiento:</strong> <span id="resumen-procedimiento">-</span></p>
+            <p><strong>Fecha:</strong> <span id="resumen-fecha">-</span></p>
+            <p><strong>Horario:</strong> <span id="resumen-hora">-</span></p>
+            <p><strong>Total a pagar:</strong> <span class="price-total" id="resumen-total">-</span></p>
+        </section>
+
+        <section class="panel">
+            <h2 class="section-heading" style="font-size:1.2rem;">Datos de pago</h2>
+            <p class="note" style="margin-bottom:16px;">
+                Este es un formulario de demostración; no procesa pagos reales.
+            </p>
+
+            <div id="pago-message" class="message" role="status"></div>
+
+            <form id="pago-form">
+                <div class="field">
+                    <label for="pago-nombre">Nombre en la tarjeta</label>
+                    <input type="text" id="pago-nombre" autocomplete="cc-name" required>
+                </div>
+
+                <div class="field">
+                    <label for="pago-numero">Número de tarjeta</label>
+                    <input type="text" id="pago-numero" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" maxlength="19" required>
+                </div>
+
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="pago-vigencia">Vigencia</label>
+                        <input type="text" id="pago-vigencia" placeholder="MM/AA" autocomplete="cc-exp" maxlength="5" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="pago-cvv">CVV</label>
+                        <input type="text" id="pago-cvv" inputmode="numeric" autocomplete="cc-csc" maxlength="4" required>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-success">Confirmar y pagar</button>
+                    <a href="especialidades.html" class="btn btn-secondary">Cancelar</a>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>SanitasFlow © 2026</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

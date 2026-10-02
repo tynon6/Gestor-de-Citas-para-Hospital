@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SanitasFlow - Cita confirmada</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="confirmacion">
+    <header class="site-header">
+        <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">✚</span>SanitasFlow</a>
+
+        <nav class="site-nav" aria-label="Navegación principal">
+            <a href="especialidades.html">Especialidades</a>
+            <a href="index.html#conocenos">Conócenos</a>
+            <a href="reservar-cita.html?especialidad=general&amp;procedimiento=gen-consulta">Cita general</a>
+        </nav>
+
+        <div class="header-actions" id="auth-slot"></div>
+    </header>
+
+    <main class="page-shell narrow-shell" id="confirm-app">
+        <section class="panel">
+            <span class="big-emoji" style="font-size:3rem; display:block; text-align:center;">✅</span>
+            <h1 class="section-heading" style="text-align:center; border-bottom:0;">Tu cita quedó confirmada</h1>
+
+            <section class="panel summary-list" style="margin-top:16px;">
+                <p><strong>Especialidad:</strong> <span id="res-especialidad">-</span></p>
+                <p><strong>Procedimiento:</strong> <span id="res-procedimiento">-</span></p>
+                <p><strong>Fecha:</strong> <span id="res-fecha">-</span></p>
+                <p><strong>Horario:</strong> <span id="res-hora">-</span></p>
+                <p><strong>Motivo:</strong> <span id="res-motivo">-</span></p>
+                <p><strong>Total pagado:</strong> <span class="price-total" id="res-total">-</span></p>
+            </section>
+
+            <div class="actions" style="margin-top:22px; justify-content:center;">
+                <a href="bienvenida-paciente.html" class="btn btn-primary">Ver mis citas</a>
+                <a href="index.html" class="btn btn-secondary">Ir al inicio</a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>SanitasFlow © 2026</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SanitasFlow - Agendar cita</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="reservar-cita">
+    <header class="site-header">
+        <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">✚</span>SanitasFlow</a>
+
+        <nav class="site-nav" aria-label="Navegación principal">
+            <a href="especialidades.html">Especialidades</a>
+            <a href="index.html#conocenos">Conócenos</a>
+            <a href="reservar-cita.html?especialidad=general&amp;procedimiento=gen-consulta">Cita general</a>
+        </nav>
+
+        <div class="header-actions" id="auth-slot"></div>
+    </header>
+
+    <main class="page-shell narrow-shell" id="booking-app">
+        <section class="panel">
+            <h1 class="section-heading" id="booking-title">Agendar cita</h1>
+            <p class="section-desc" id="booking-desc"></p>
+
+            <form id="booking-form">
+                <h2 class="card-title" style="font-size:1.1rem; text-align:left; margin-bottom:10px;">1. Elige el día</h2>
+                <div class="date-grid" id="date-grid"></div>
+
+                <h2 class="card-title" style="font-size:1.1rem; text-align:left; margin-bottom:10px;">2. Elige el horario</h2>
+                <div class="slot-grid" id="slot-grid"></div>
+                <p class="message error hidden" id="slot-empty">No hay horarios disponibles ese día. Elige otra fecha.</p>
+
+                <div class="field" style="margin-top:18px;">
+                    <label for="motivo">Motivo de tu consulta (opcional)</label>
+                    <textarea id="motivo" placeholder="Cuéntanos brevemente qué síntomas o motivo te llevan a consulta"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="continue-btn" disabled>Continuar al pago</button>
+                    <a href="especialidades.html" class="btn btn-secondary">Cancelar</a>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>SanitasFlow © 2026</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

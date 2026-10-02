@@ -427,3 +427,12 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Local deployment and secret files
+.env
+.env.*
+appsettings.*.local.json
+
+# .NET output for this project
+SanitasFlow.Api/bin/
+SanitasFlow.Api/obj/

@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>SanitasFlow.Api.local</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+  </ItemGroup>
+
+  <Target Name="PrepareFrontendAssets" BeforeTargets="ResolveStaticWebAssetsInputs">
+    <ItemGroup>
+      <FrontendAssets Include="$(MSBuildProjectDirectory)\..\*.html" />
+      <FrontendAssets Include="$(MSBuildProjectDirectory)\..\app.js" />
+      <FrontendAssets Include="$(MSBuildProjectDirectory)\..\styles.css" />
+      <FrontendAssets Include="$(MSBuildProjectDirectory)\..\hero.jpg" />
+    </ItemGroup>
+    <MakeDir Directories="$(MSBuildProjectDirectory)\wwwroot" />
+    <Copy SourceFiles="@(FrontendAssets)" DestinationFolder="$(MSBuildProjectDirectory)\wwwroot" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SanitasFlow - Mi inicio</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="bienvenida">
+    <header class="site-header">
+        <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">✚</span>SanitasFlow</a>
+
+        <nav class="site-nav" aria-label="Navegación principal">
+            <a href="especialidades.html">Especialidades</a>
+            <a href="index.html#conocenos">Conócenos</a>
+            <a href="reservar-cita.html?especialidad=general&amp;procedimiento=gen-consulta">Cita general</a>
+        </nav>
+
+        <div class="header-actions" id="auth-slot"></div>
+    </header>
+
+    <main class="page-shell narrow-shell">
+        <section class="panel">
+            <h1 class="section-heading">Hola, <span id="welcome-name">paciente</span></h1>
+            <p class="section-desc">Aquí puedes ver tus próximas citas y acceder a tus datos personales.</p>
+
+            <div class="actions" style="margin-bottom:22px;">
+                <a href="especialidades.html" class="btn btn-primary">Agendar nueva cita</a>
+                <a href="perfil-paciente.html" class="btn btn-secondary">Mis datos personales</a>
+            </div>
+
+            <h2 class="card-title" style="font-size:1.2rem; text-align:left;">Mis citas</h2>
+            <p class="message hidden" id="appointments-empty">Todavía no tienes citas agendadas.</p>
+            <div class="appointments-list" id="appointments-list"></div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>SanitasFlow © 2026</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

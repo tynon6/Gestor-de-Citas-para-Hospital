@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SanitasFlow - Mi perfil</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="perfil-paciente">
+    <header class="site-header">
+        <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">✚</span>SanitasFlow</a>
+
+        <nav class="site-nav" aria-label="Navegación principal">
+            <a href="especialidades.html">Especialidades</a>
+            <a href="index.html#conocenos">Conócenos</a>
+            <a href="reservar-cita.html?especialidad=general&amp;procedimiento=gen-consulta">Cita general</a>
+        </nav>
+
+        <div class="header-actions" id="auth-slot"></div>
+    </header>
+
+    <main class="page-shell narrow-shell">
+        <section class="panel">
+            <h1 class="section-heading">Mis datos personales</h1>
+            <p class="section-desc">Mantén tus datos actualizados para que tus citas se agenden más rápido.</p>
+
+            <div id="profile-message" class="message" role="status"></div>
+
+            <form id="profile-form">
+                <div class="form-grid-3">
+                    <div class="field">
+                        <label for="profile-nombres">Nombre(s)</label>
+                        <input type="text" id="profile-nombres" autocomplete="given-name" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="profile-paterno">Apellido paterno</label>
+                        <input type="text" id="profile-paterno" autocomplete="family-name" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="profile-materno">Apellido materno</label>
+                        <input type="text" id="profile-materno" autocomplete="family-name">
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="profile-edad">Edad</label>
+                        <input type="number" id="profile-edad" min="0" max="120" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="profile-correo">Correo electrónico</label>
+                        <input type="email" id="profile-correo" disabled>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Guardar datos</button>
+                    <a href="bienvenida-paciente.html" class="btn btn-secondary">Regresar</a>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>SanitasFlow © 2026</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

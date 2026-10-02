@@ -1,0 +1,9 @@
+.git
+**/.git/**
+**/bin/
+**/obj/
+**/.vs/
+**/node_modules/
+.env
+.env.*
+**/secrets.json
