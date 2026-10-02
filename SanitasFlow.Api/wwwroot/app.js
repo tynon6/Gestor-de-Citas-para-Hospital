@@ -1,10 +1,10 @@
 "use strict";
 
 /* =========================================================================
-   SanitasFlow - prototipo de frontend
+   SanitasFlow - interfaz web
    -------------------------------------------------------------------------
-   La información persistente se obtiene de la API ASP.NET Core y SQL
-   Server. sessionStorage solo conserva el borrador entre la selección
+   La información persistente se obtiene de la API ASP.NET Core y PostgreSQL.
+   sessionStorage solo conserva el borrador entre la selección
    del horario y la confirmación de la cita.
    ========================================================================= */
 
