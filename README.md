@@ -21,7 +21,7 @@ SanitasFlow permite a los pacientes explorar el catálogo de servicios, crear un
 - Persistencia: PostgreSQL con Entity Framework Core y Npgsql.
 - Autenticación: cookie HTTP-only y contraseñas almacenadas como hash.
 
-## Demo en línea
+## Página web
 
 **Enlace:** [SanitasFlow](https://gestor-de-citas-para-hospital.onrender.com/)
 
