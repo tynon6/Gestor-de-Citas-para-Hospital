@@ -33,7 +33,7 @@ El repositorio contiene un `Dockerfile` para desplegar el sitio y la API juntos.
    - `ConnectionStrings__DefaultConnection` = cadena Npgsql formada con el host interno, puerto, nombre de base, usuario y contraseña que muestra Render. Ejemplo:
 
 ```text
-Host=HOST_INTERNO;Port=5432;Database=NOMBRE_BASE;Username=USUARIO;Password=CONTRASENA;SSL Mode=Require;Trust Server Certificate=true
+Host=HOST_INTERNO;Port=5432;Database=NOMBRE_BASE;Username=USUARIO;Password=CONTRASENA;SSL Mode=Require
 ```
 
 5. Espera a que termine el despliegue y comparte la URL HTTPS que Render asigna al servicio.
@@ -52,3 +52,4 @@ No guardes la cadena de conexión en este repositorio. Configúrala únicamente 
 - `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`
 - `PUT /api/pacientes/me`
 - `GET /api/citas/disponibilidad`, `GET /api/citas/mias`, `GET /api/citas/{id}`, `POST /api/citas`
+
