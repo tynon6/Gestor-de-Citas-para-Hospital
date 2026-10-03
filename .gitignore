@@ -436,3 +436,5 @@ appsettings.*.local.json
 # .NET output for this project
 SanitasFlow.Api/bin/
 SanitasFlow.Api/obj/
+SanitasFlow.Api/wwwroot/*
+!SanitasFlow.Api/wwwroot/.gitkeep

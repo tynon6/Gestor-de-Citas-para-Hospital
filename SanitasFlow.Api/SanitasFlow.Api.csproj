@@ -18,10 +18,10 @@
 
   <Target Name="PrepareFrontendAssets" BeforeTargets="ResolveStaticWebAssetsInputs">
     <ItemGroup>
-      <FrontendAssets Include="$(MSBuildProjectDirectory)\..\*.html" />
-      <FrontendAssets Include="$(MSBuildProjectDirectory)\..\app.js" />
-      <FrontendAssets Include="$(MSBuildProjectDirectory)\..\styles.css" />
-      <FrontendAssets Include="$(MSBuildProjectDirectory)\..\hero.jpg" />
+      <FrontendAssets Include="$(MSBuildProjectDirectory)\..\Interfaz\*.html" />
+      <FrontendAssets Include="$(MSBuildProjectDirectory)\..\Interfaz\app.js" />
+      <FrontendAssets Include="$(MSBuildProjectDirectory)\..\Interfaz\styles.css" />
+      <FrontendAssets Include="$(MSBuildProjectDirectory)\..\Interfaz\hero.jpg" />
     </ItemGroup>
     <MakeDir Directories="$(MSBuildProjectDirectory)\wwwroot" />
     <Copy SourceFiles="@(FrontendAssets)" DestinationFolder="$(MSBuildProjectDirectory)\wwwroot" SkipUnchangedFiles="true" />
