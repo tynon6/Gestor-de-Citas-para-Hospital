@@ -597,10 +597,12 @@ async function initBienvenida() {
         return;
     }
 
-    bookings.forEach((booking) => {
+    for (const booking of bookings) {
         const date = new Date(`${booking.fecha}T00:00:00`);
         const card = document.createElement("div");
         card.className = "appointment-card";
+        const main = document.createElement("div");
+        main.className = "appointment-main";
         const content = document.createElement("div");
         const title = document.createElement("strong");
         title.textContent = `${booking.especialidad} · ${booking.procedimiento}`;
@@ -608,11 +610,159 @@ async function initBienvenida() {
         details.className = "procedure-meta";
         details.textContent = `${date.toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" })} · ${minutesToLabel(booking.inicioMin)}`;
         content.append(title, details);
+        main.append(content);
         const badge = document.createElement("span");
         badge.className = "badge badge-confirmed";
         badge.textContent = booking.estado;
-        card.append(content, badge);
+        const actions = document.createElement("div");
+        actions.className = "appointment-actions";
+        const policyMessage = document.createElement("p");
+        policyMessage.className = "appointment-policy hidden";
+        policyMessage.setAttribute("aria-live", "polite");
+        const flow = document.createElement("div");
+        flow.className = "cancellation-flow hidden";
+        const policyLink = document.createElement("a");
+        policyLink.href = "detalles-cancelacion.html";
+        policyLink.textContent = "Detalles de cancelación";
+        actions.append(badge);
+        card.append(main, actions);
+
+        if (booking.estado !== "Cancelada") {
+            const cancelButton = document.createElement("button");
+            cancelButton.type = "button";
+            cancelButton.className = "btn btn-danger";
+            cancelButton.textContent = "Cancelar cita";
+            actions.append(cancelButton);
+
+            cancelButton.addEventListener("click", async () => {
+                flow.replaceChildren();
+                policyMessage.classList.remove("hidden", "warning");
+                policyMessage.textContent = "Consultando las condiciones de cancelación…";
+                flow.classList.remove("hidden");
+                cancelButton.disabled = true;
+                let quote;
+                try {
+                    quote = await api(`/citas/${booking.id}/cancelacion`);
+                } catch (error) {
+                    policyMessage.textContent = error.message;
+                    cancelButton.disabled = false;
+                    return;
+                }
+                cancelButton.disabled = false;
+                policyMessage.textContent = quote.mensaje;
+                if (quote.porcentajeReembolso === 0) policyMessage.classList.add("warning");
+
+                const closeButton = document.createElement("button");
+                closeButton.type = "button";
+                closeButton.className = "btn btn-secondary";
+                closeButton.textContent = "Cancelar";
+                closeButton.addEventListener("click", () => {
+                    flow.classList.add("hidden");
+                    policyMessage.classList.add("hidden");
+                });
+
+                if (!quote.puedeCancelar) {
+                    flow.append(closeButton);
+                    return;
+                }
+
+                const continueButton = document.createElement("button");
+                continueButton.type = "button";
+                continueButton.className = "btn btn-primary";
+                continueButton.textContent = "Continuar";
+                continueButton.addEventListener("click", () => {
+                    flow.replaceChildren();
+                    const reasonLabel = document.createElement("label");
+                    reasonLabel.htmlFor = `cancel-reason-${booking.id}`;
+                    reasonLabel.textContent = "Motivo de cancelación";
+                    const reason = document.createElement("textarea");
+                    reason.id = reasonLabel.htmlFor;
+                    reason.required = true;
+                    reason.maxLength = 1000;
+                    reason.placeholder = "Cuéntanos brevemente por qué necesitas cancelar";
+                    const rescheduleLabel = document.createElement("label");
+                    rescheduleLabel.className = "checkbox-line";
+                    const reschedule = document.createElement("input");
+                    reschedule.type = "checkbox";
+                    const rescheduleText = document.createElement("span");
+                    rescheduleText.textContent = `Deseo reagendar esta consulta. La nueva cita tendrá un pago de $${Number(booking.precio).toFixed(2)} MXN.`;
+                    rescheduleLabel.append(reschedule, rescheduleText);
+                    const stepActions = document.createElement("div");
+                    stepActions.className = "actions";
+                    const confirmButton = document.createElement("button");
+                    confirmButton.type = "submit";
+                    confirmButton.className = "btn btn-danger";
+                    confirmButton.textContent = "Confirmar cancelación";
+                    const backButton = document.createElement("button");
+                    backButton.type = "button";
+                    backButton.className = "btn btn-secondary";
+                    backButton.textContent = "Volver";
+                    backButton.addEventListener("click", () => cancelButton.click());
+                    stepActions.append(confirmButton, backButton);
+                    const form = document.createElement("form");
+                    form.className = "cancellation-form";
+                    form.append(reasonLabel, reason, rescheduleLabel, stepActions);
+                    form.addEventListener("submit", async (event) => {
+                        event.preventDefault();
+                        confirmButton.disabled = true;
+                        try {
+                            const result = await api(`/citas/${booking.id}/cancelar`, {
+                                method: "POST",
+                                body: JSON.stringify({ motivoCancelacion: reason.value.trim(), deseaReagendar: reschedule.checked })
+                            });
+                            badge.textContent = "Cancelada";
+                            badge.className = "badge";
+                            cancelButton.remove();
+                            flow.replaceChildren();
+                            const resultMessage = document.createElement("p");
+                            resultMessage.className = "message ok";
+                            resultMessage.textContent = result.porcentajeReembolso > 0
+                                ? `${result.mensaje} Reembolso simulado: $${result.montoReembolso.toFixed(2)} MXN.`
+                                : `${result.mensaje} No se registró devolución.`;
+                            flow.append(resultMessage);
+                            if (reschedule.checked) {
+                                const rebookLink = document.createElement("a");
+                                rebookLink.className = "btn btn-primary";
+                                rebookLink.href = `reservar-cita.html?especialidad=${encodeURIComponent(booking.especialidadId)}&procedimiento=${encodeURIComponent(booking.procedimientoId)}`;
+                                rebookLink.textContent = `Elegir nueva fecha y volver a pagar $${Number(booking.precio).toFixed(2)} MXN`;
+                                flow.append(rebookLink);
+                            }
+                        } catch (error) {
+                            policyMessage.textContent = error.message;
+                            confirmButton.disabled = false;
+                        }
+                    });
+                    flow.append(form);
+                });
+                flow.append(continueButton, closeButton);
+            });
+        }
+        card.append(policyMessage, flow, policyLink);
         list.append(card);
+    }
+}
+
+function initCancelacion() {
+    renderHeaderAuth();
+    requireSession("detalles-cancelacion.html");
+}
+
+function initDonativos() {
+    renderHeaderAuth();
+}
+
+function initDonar() {
+    renderHeaderAuth();
+    const form = $("#donation-form");
+    if (!form) return;
+    form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const amount = Number($("#donation-amount").value);
+        form.reset();
+        $("#donation-thanks-amount").textContent = `Tu apoyo por $${amount.toFixed(2)} MXN es muy valioso para fortalecer los espacios y la atención del hospital.`;
+        $("#donation-panel").classList.add("hidden");
+        $("#donation-success").classList.remove("hidden");
+        $("#donation-success").scrollIntoView({ behavior: "smooth", block: "center" });
     });
 }
 
@@ -733,6 +883,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         "pago-cita": initPagoCita,
         confirmacion: initConfirmacion,
         bienvenida: initBienvenida,
+        cancelacion: initCancelacion,
+        donativos: initDonativos,
+        donar: initDonar,
         "perfil-paciente": initPerfil,
         registro: initRegistro
     };

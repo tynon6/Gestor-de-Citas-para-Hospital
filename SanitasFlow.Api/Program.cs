@@ -34,6 +34,7 @@ builder.Services.AddCors(options => options.AddPolicy("frontend", policy => poli
     .AllowCredentials()));
 
 builder.Services.AddScoped<CitaService>();
+builder.Services.AddScoped<CancellationPolicyService>();
 builder.Services.AddSingleton<PasswordService>();
 
 builder.Services.AddControllers();
@@ -48,6 +49,10 @@ if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Databas
     await using var scope = app.Services.CreateAsyncScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.EnsureCreatedAsync();
+    await db.Database.ExecuteSqlRawAsync("""
+        ALTER TABLE "Citas" ADD COLUMN IF NOT EXISTS "MotivoCancelacion" character varying(1000);
+        ALTER TABLE "Citas" ADD COLUMN IF NOT EXISTS "DeseaReagendar" boolean NOT NULL DEFAULT FALSE;
+        """);
     await CatalogSeed.SeedAsync(db);
 }
 

@@ -174,29 +174,19 @@ button {
     display: flex;
     justify-content: center;
     padding: clamp(56px, 11vw, 100px) clamp(16px, 6vw, 60px);
-    background: linear-gradient(135deg, var(--brand-dark), var(--brand));
+    min-height: 500px;
+    background-color: var(--brand-dark);
+    background-image: linear-gradient(120deg, rgba(10, 42, 92, 0.78), rgba(22, 87, 179, 0.58)), url("fachada-hospital.png");
     background-size: cover;
     background-position: center;
     overflow: hidden;
-}
-
-/*
-  Para poner una imagen de fondo real:
-  1. Agrega el archivo (ej. "hero.jpg") en esta misma carpeta.
-  2. Descomenta la línea de background-image de abajo.
-  3. El overlay (.hero-banner::before) controla qué tan visible queda la
-     imagen; bájale el 0.45/0.55 de opacidad si se ve muy oscura, o súbelo
-     si el texto no se lee bien.
-*/
-.hero-banner {
-    /* background-image: url('hero.jpg'); */
 }
 
 .hero-banner::before {
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(10, 42, 92, 0.55), rgba(10, 42, 92, 0.45));
+    background: linear-gradient(90deg, rgba(10, 42, 92, 0.22), rgba(10, 42, 92, 0.05));
 }
 
 .hero-banner-inner {
@@ -736,6 +726,36 @@ textarea:focus {
     flex-wrap: wrap;
 }
 
+.appointment-main { flex: 1 1 250px; }
+.appointment-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.appointment-policy { flex: 1 1 100%; margin: 4px 0 0; color: var(--muted); font-size: 0.92rem; }
+.appointment-policy.warning { color: #8a4b08; background: #fff4df; border: 1px solid #f1d49c; border-radius: var(--radius); padding: 10px 12px; }
+.cancellation-flow { flex: 1 1 100%; display: grid; gap: 12px; padding: 16px; background: #f8fbff; border: 1px solid var(--line); border-radius: var(--radius); }
+.cancellation-form { display: grid; gap: 10px; }
+.cancellation-form textarea { width: 100%; min-height: 90px; border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; color: var(--text); }
+.checkbox-line { display: flex; align-items: flex-start; gap: 10px; color: var(--muted); }
+.checkbox-line input { margin-top: 6px; accent-color: var(--brand); }
+.btn-danger { background: #fff1ef; color: #9b241d; border-color: #e8b7b1; }
+.btn-danger:hover { background: #ffe2de; }
+.appointment-actions .btn-danger { min-height: 0; padding: 3px 10px; border-radius: 999px; font-size: 0.78rem; line-height: 1.6; }
+
+.donation-section { background: #eef5ff; }
+.donation-content { display: flex; align-items: center; justify-content: space-between; gap: 28px; }
+.donation-content .section-heading { margin-bottom: 8px; }
+.donation-content .section-desc { margin: 0; max-width: 760px; }
+.eyebrow { color: var(--brand); font-size: 0.82rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 6px; }
+.policy-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 24px 0; padding: 0; list-style: none; }
+.policy-list li { border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; background: var(--surface); color: var(--muted); line-height: 1.7; box-shadow: 0 8px 24px rgba(11, 47, 99, 0.06); }
+.policy-list strong { display: block; color: var(--brand-dark); margin-bottom: 8px; line-height: 1.4; }
+.draft-note { border-left: 4px solid var(--accent); padding: 12px 16px; background: var(--surface-soft); color: var(--muted); }
+.donation-actions { display: flex; align-items: center; gap: 12px; margin-top: 28px; }
+.donation-form { display: grid; gap: 18px; margin-top: 22px; }
+.donation-form .field { display: grid; gap: 6px; }
+.donation-form input { min-height: 46px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); }
+.donation-confirmation { text-align: center; padding: 35px 16px; }
+.donation-heart { color: #e34c68; font-size: clamp(5rem, 18vw, 9rem); line-height: 1; animation: heartBeat 1.15s ease-in-out infinite; }
+@keyframes heartBeat { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.18); } 30% { transform: scale(1); } 45% { transform: scale(1.1); } }
+
 .footer {
     background: var(--brand-strong);
     color: #d9e7fb;
@@ -779,4 +799,8 @@ textarea:focus {
         flex-direction: column;
         align-items: flex-start;
     }
+
+    .donation-content { align-items: stretch; flex-direction: column; }
+    .policy-list { grid-template-columns: 1fr; }
+    .donation-actions { align-items: stretch; flex-direction: column; }
 }

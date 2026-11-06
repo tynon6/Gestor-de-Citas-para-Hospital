@@ -12,7 +12,7 @@ namespace SanitasFlow.Api.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/citas")]
-public class CitasController(AppDbContext context, CitaService citaService) : ControllerBase
+public class CitasController(AppDbContext context, CitaService citaService, CancellationPolicyService cancellationPolicy) : ControllerBase
 {
     [HttpGet("disponibilidad")]
     public async Task<ActionResult<object>> Disponibilidad([FromQuery] string especialidadId, [FromQuery] string procedimientoId, [FromQuery] string fecha, CancellationToken cancellationToken)
@@ -51,6 +51,35 @@ public class CitasController(AppDbContext context, CitaService citaService) : Co
         return cita is null ? NotFound() : Ok(ToResponse(cita));
     }
 
+    [HttpGet("{id:int}/cancelacion")]
+    public async Task<ActionResult<CancellationQuoteResponse>> GetCancellationQuote(int id, CancellationToken cancellationToken)
+    {
+        if (!TryGetPatientId(out var pacienteId)) return Unauthorized();
+        var cita = await context.Citas.AsNoTracking()
+            .SingleOrDefaultAsync(c => c.Id == id && c.PacienteId == pacienteId, cancellationToken);
+        return cita is null ? NotFound() : Ok(cancellationPolicy.GetQuote(cita));
+    }
+
+    [HttpPost("{id:int}/cancelar")]
+    public async Task<ActionResult<CancellationQuoteResponse>> Cancel(int id, CancelAppointmentRequest request, CancellationToken cancellationToken)
+    {
+        if (!TryGetPatientId(out var pacienteId)) return Unauthorized();
+        if (string.IsNullOrWhiteSpace(request.MotivoCancelacion) || request.MotivoCancelacion.Trim().Length > 1000)
+            return BadRequest(new { message = "Escribe un motivo de cancelación de hasta 1000 caracteres." });
+        var cita = await context.Citas
+            .SingleOrDefaultAsync(c => c.Id == id && c.PacienteId == pacienteId, cancellationToken);
+        if (cita is null) return NotFound();
+
+        try
+        {
+            return Ok(await cancellationPolicy.CancelAsync(cita, request.MotivoCancelacion, request.DeseaReagendar, cancellationToken));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
+    }
+
     [HttpPost]
     public async Task<ActionResult<AppointmentResponse>> Create(CreateAppointmentRequest request, CancellationToken cancellationToken)
     {
@@ -73,6 +102,6 @@ public class CitasController(AppDbContext context, CitaService citaService) : Co
 
     private bool TryGetPatientId(out int patientId) => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out patientId);
 
-    private static AppointmentResponse ToResponse(Cita cita) => new(cita.Id, cita.Especialidad.Nombre, cita.Procedimiento.Nombre,
+    private static AppointmentResponse ToResponse(Cita cita) => new(cita.Id, cita.EspecialidadId, cita.ProcedimientoId, cita.Especialidad.Nombre, cita.Procedimiento.Nombre,
         cita.Fecha.ToString("yyyy-MM-dd"), cita.InicioMin, cita.FinMin, cita.Precio, cita.Motivo, cita.Estado);
 }

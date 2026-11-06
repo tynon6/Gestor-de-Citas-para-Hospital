@@ -12,6 +12,8 @@ namespace SanitasFlow.Api.Models
         public string Motivo { get; set; } = string.Empty;
         public decimal Precio { get; set; }
         public string Estado { get; set; } = "Confirmada";
+        public string? MotivoCancelacion { get; set; }
+        public bool DeseaReagendar { get; set; }
         public DateTime CreadaEnUtc { get; set; } = DateTime.UtcNow;
         public Paciente Paciente { get; set; } = null!;
         public Especialidad Especialidad { get; set; } = null!;

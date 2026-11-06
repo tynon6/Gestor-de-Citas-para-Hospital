@@ -21,7 +21,8 @@
       <FrontendAssets Include="$(MSBuildProjectDirectory)\..\Interfaz\*.html" />
       <FrontendAssets Include="$(MSBuildProjectDirectory)\..\Interfaz\app.js" />
       <FrontendAssets Include="$(MSBuildProjectDirectory)\..\Interfaz\styles.css" />
-      <FrontendAssets Include="$(MSBuildProjectDirectory)\..\Interfaz\hero.jpg" />
+      <FrontendAssets Include="$(MSBuildProjectDirectory)\..\Interfaz\*.jpg" />
+      <FrontendAssets Include="$(MSBuildProjectDirectory)\..\Interfaz\*.png" />
     </ItemGroup>
     <MakeDir Directories="$(MSBuildProjectDirectory)\wwwroot" />
     <Copy SourceFiles="@(FrontendAssets)" DestinationFolder="$(MSBuildProjectDirectory)\wwwroot" SkipUnchangedFiles="true" />

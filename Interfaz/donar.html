@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SanitasFlow - Donar</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="donar">
+    <header class="site-header">
+        <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">✚</span>SanitasFlow</a>
+        <div class="header-actions" id="auth-slot"></div>
+    </header>
+    <main class="page-shell narrow-shell">
+        <section class="panel" id="donation-panel">
+            <p class="eyebrow">Tu apoyo fortalece la atención</p>
+            <h1 class="section-heading">Elige el monto de tu apoyo</h1>
+            <p class="section-desc">Elige el monto que deseas aportar y completa tus datos de pago.</p>
+            <form class="donation-form" id="donation-form" autocomplete="off">
+                <div class="field">
+                    <label for="donation-amount">Monto a donar (MXN)</label>
+                    <input id="donation-amount" name="amount" type="number" min="10" max="100000" step="10" value="200" required>
+                </div>
+                <h2 class="card-title" style="font-size:1.15rem;text-align:left;margin:8px 0 0;">Datos de pago</h2>
+                <div class="field">
+                    <label for="donor-name">Nombre que aparece en la tarjeta</label>
+                    <input id="donor-name" name="cardholder" type="text" autocomplete="off" placeholder="Nombre como aparece en la tarjeta" required>
+                </div>
+                <div class="field">
+                    <label for="donor-card">Número de tarjeta</label>
+                    <input id="donor-card" name="card" type="text" inputmode="numeric" maxlength="19" autocomplete="off" placeholder="0000 0000 0000 0000" required>
+                </div>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="donor-expiry">Vencimiento</label>
+                        <input id="donor-expiry" name="expiry" type="text" maxlength="5" autocomplete="off" placeholder="MM/AA" required>
+                    </div>
+                    <div class="field">
+                        <label for="donor-cvv">CVV</label>
+                        <input id="donor-cvv" name="cvv" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="000" required>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" type="submit">Confirmar donativo</button>
+                    <a class="btn btn-secondary" href="donativos.html">Volver</a>
+                </div>
+            </form>
+        </section>
+        <section class="panel donation-confirmation hidden" id="donation-success" aria-live="polite">
+            <div class="donation-heart" aria-hidden="true">♥</div>
+            <p class="eyebrow">Gracias por tu apoyo</p>
+            <h1 class="section-heading">¡Muchas gracias por donar!</h1>
+            <p class="section-desc" id="donation-thanks-amount"></p>
+            <p class="section-desc">Tu generosidad ayuda a imaginar un hospital más cómodo, equipado y cercano para todas las personas.</p>
+            <a class="btn btn-primary" href="index.html">Regresar al inicio</a>
+        </section>
+    </main>
+    <footer class="footer"><p>SanitasFlow © 2026</p></footer>
+    <script src="app.js"></script>
+</body>
+</html>

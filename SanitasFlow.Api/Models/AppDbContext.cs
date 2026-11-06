@@ -34,6 +34,7 @@ namespace SanitasFlow.Api.Models
                 entity.HasIndex(c => new { c.EspecialidadId, c.Fecha });
                 entity.Property(c => c.Precio).HasPrecision(10, 2);
                 entity.Property(c => c.Estado).HasMaxLength(32);
+                entity.Property(c => c.MotivoCancelacion).HasMaxLength(1000);
                 entity.HasOne(c => c.Paciente).WithMany(p => p.Citas).HasForeignKey(c => c.PacienteId);
                 entity.HasOne(c => c.Especialidad).WithMany().HasForeignKey(c => c.EspecialidadId).OnDelete(DeleteBehavior.Restrict);
                 entity.HasOne(c => c.Procedimiento).WithMany().HasForeignKey(c => c.ProcedimientoId).OnDelete(DeleteBehavior.Restrict);
