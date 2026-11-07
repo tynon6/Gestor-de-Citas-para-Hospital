@@ -52,6 +52,9 @@ if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Databas
     await db.Database.ExecuteSqlRawAsync("""
         ALTER TABLE "Citas" ADD COLUMN IF NOT EXISTS "MotivoCancelacion" character varying(1000);
         ALTER TABLE "Citas" ADD COLUMN IF NOT EXISTS "DeseaReagendar" boolean NOT NULL DEFAULT FALSE;
+        ALTER TABLE "Citas" ADD COLUMN IF NOT EXISTS "CanceladaEnUtc" timestamp with time zone;
+        ALTER TABLE "Citas" ADD COLUMN IF NOT EXISTS "PorcentajeReembolso" integer;
+        ALTER TABLE "Citas" ADD COLUMN IF NOT EXISTS "MontoReembolso" numeric(10,2);
         """);
     await CatalogSeed.SeedAsync(db);
 }

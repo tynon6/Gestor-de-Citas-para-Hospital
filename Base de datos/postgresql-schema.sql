@@ -46,8 +46,21 @@ CREATE TABLE IF NOT EXISTS "Citas" (
     "Precio" numeric(10,2) NOT NULL,
     "Estado" varchar(32) NOT NULL,
     "CreadaEnUtc" timestamp with time zone NOT NULL,
+    "MotivoCancelacion" varchar(1000),
+    "DeseaReagendar" boolean NOT NULL DEFAULT FALSE,
+    "CanceladaEnUtc" timestamp with time zone,
+    "PorcentajeReembolso" integer,
+    "MontoReembolso" numeric(10,2),
     CONSTRAINT "CK_Citas_Horario" CHECK ("FinMin" > "InicioMin")
 );
+
+-- Actualiza bases existentes sin borrar citas ni pagos.
+ALTER TABLE "Citas" ADD COLUMN IF NOT EXISTS "MotivoCancelacion" varchar(1000);
+ALTER TABLE "Citas" ADD COLUMN IF NOT EXISTS "DeseaReagendar" boolean NOT NULL DEFAULT FALSE;
+ALTER TABLE "Citas" ADD COLUMN IF NOT EXISTS "CanceladaEnUtc" timestamp with time zone;
+ALTER TABLE "Citas" ADD COLUMN IF NOT EXISTS "PorcentajeReembolso" integer;
+ALTER TABLE "Citas" ADD COLUMN IF NOT EXISTS "MontoReembolso" numeric(10,2);
+
 CREATE INDEX IF NOT EXISTS "IX_Citas_EspecialidadId_Fecha" ON "Citas"("EspecialidadId", "Fecha");
 
 CREATE TABLE IF NOT EXISTS "Pagos" (

@@ -39,6 +39,9 @@ public class CancellationPolicyService(AppDbContext context)
         cita.Estado = "Cancelada";
         cita.MotivoCancelacion = motivoCancelacion.Trim();
         cita.DeseaReagendar = deseaReagendar;
+        cita.CanceladaEnUtc = DateTime.UtcNow;
+        cita.PorcentajeReembolso = quote.PorcentajeReembolso;
+        cita.MontoReembolso = quote.MontoReembolso;
         var payments = await context.Pagos
             .Where(p => p.CitaId == cita.Id && p.Estado == "Aprobado")
             .ToListAsync(cancellationToken);
