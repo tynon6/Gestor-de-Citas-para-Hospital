@@ -15,33 +15,15 @@
         <section class="panel" id="donation-panel">
             <p class="eyebrow">Tu apoyo fortalece la atención</p>
             <h1 class="section-heading">Elige el monto de tu apoyo</h1>
-            <p class="section-desc">Elige el monto que deseas aportar y completa tus datos de pago.</p>
+            <p class="section-desc">Elige el monto que deseas aportar.</p>
             <form class="donation-form" id="donation-form" autocomplete="off">
                 <div class="field">
                     <label for="donation-amount">Monto a donar (MXN)</label>
                     <input id="donation-amount" name="amount" type="number" min="10" max="100000" step="10" value="200" required>
                 </div>
-                <h2 class="card-title" style="font-size:1.15rem;text-align:left;margin:8px 0 0;">Datos de pago</h2>
-                <div class="field">
-                    <label for="donor-name">Nombre que aparece en la tarjeta</label>
-                    <input id="donor-name" name="cardholder" type="text" autocomplete="off" placeholder="Nombre como aparece en la tarjeta" required>
-                </div>
-                <div class="field">
-                    <label for="donor-card">Número de tarjeta</label>
-                    <input id="donor-card" name="card" type="text" inputmode="numeric" maxlength="19" autocomplete="off" placeholder="0000 0000 0000 0000" required>
-                </div>
-                <div class="form-grid">
-                    <div class="field">
-                        <label for="donor-expiry">Vencimiento</label>
-                        <input id="donor-expiry" name="expiry" type="text" maxlength="5" autocomplete="off" placeholder="MM/AA" required>
-                    </div>
-                    <div class="field">
-                        <label for="donor-cvv">CVV</label>
-                        <input id="donor-cvv" name="cvv" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="000" required>
-                    </div>
-                </div>
+                <p class="form-message" id="donation-error" role="alert"></p>
                 <div class="form-actions">
-                    <button class="btn btn-primary" type="submit">Confirmar donativo</button>
+                    <button class="btn btn-primary" type="submit">Registrar donativo</button>
                     <a class="btn btn-secondary" href="donativos.html">Volver</a>
                 </div>
             </form>

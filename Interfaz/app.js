@@ -755,14 +755,26 @@ function initDonar() {
     renderHeaderAuth();
     const form = $("#donation-form");
     if (!form) return;
-    form.addEventListener("submit", (event) => {
+    form.addEventListener("submit", async (event) => {
         event.preventDefault();
         const amount = Number($("#donation-amount").value);
-        form.reset();
-        $("#donation-thanks-amount").textContent = `Tu apoyo por $${amount.toFixed(2)} MXN es muy valioso para fortalecer los espacios y la atención del hospital.`;
-        $("#donation-panel").classList.add("hidden");
-        $("#donation-success").classList.remove("hidden");
-        $("#donation-success").scrollIntoView({ behavior: "smooth", block: "center" });
+        const submitButton = $("button[type=submit]", form);
+        const errorMessage = $("#donation-error");
+        submitButton.disabled = true;
+        errorMessage.textContent = "";
+        try {
+            const donation = await api("/donativos", {
+                method: "POST",
+                body: JSON.stringify({ monto: amount })
+            });
+            $("#donation-thanks-amount").textContent = `Tu aportación de $${Number(donation.monto).toFixed(2)} ${donation.moneda} quedó registrada. Gracias por apoyar al hospital.`;
+            $("#donation-panel").classList.add("hidden");
+            $("#donation-success").classList.remove("hidden");
+            $("#donation-success").scrollIntoView({ behavior: "smooth", block: "center" });
+        } catch (error) {
+            errorMessage.textContent = error.message;
+            submitButton.disabled = false;
+        }
     });
 }
 

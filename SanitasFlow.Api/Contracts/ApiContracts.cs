@@ -8,3 +8,5 @@ public record PatientResponse(int Id, string Nombres, string ApellidoPaterno, st
 public record AppointmentResponse(int Id, string EspecialidadId, string ProcedimientoId, string Especialidad, string Procedimiento, string Fecha, int InicioMin, int FinMin, decimal Precio, string Motivo, string Estado);
 public record CancellationQuoteResponse(bool PuedeCancelar, int PorcentajeReembolso, decimal MontoReembolso, decimal MontoPagado, bool ReservadaHoy, string Mensaje);
 public record CancelAppointmentRequest(string MotivoCancelacion, bool DeseaReagendar);
+public record CreateDonationRequest(decimal Monto);
+public record DonationResponse(int Id, decimal Monto, string Moneda, string Estado, DateTime CreadoEnUtc);

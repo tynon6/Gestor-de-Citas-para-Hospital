@@ -11,6 +11,7 @@ namespace SanitasFlow.Api.Models
         public DbSet<Procedimiento> Procedimientos => Set<Procedimiento>();
         public DbSet<Cita> Citas => Set<Cita>();
         public DbSet<Pago> Pagos => Set<Pago>();
+        public DbSet<Donativo> Donativos => Set<Donativo>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -45,6 +46,13 @@ namespace SanitasFlow.Api.Models
             {
                 entity.Property(p => p.Monto).HasPrecision(10, 2);
                 entity.HasOne(p => p.Cita).WithMany(c => c.Pagos).HasForeignKey(p => p.CitaId);
+            });
+
+            modelBuilder.Entity<Donativo>(entity =>
+            {
+                entity.Property(d => d.Monto).HasPrecision(10, 2);
+                entity.Property(d => d.Moneda).HasMaxLength(3);
+                entity.Property(d => d.Estado).HasMaxLength(32);
             });
         }
     }
