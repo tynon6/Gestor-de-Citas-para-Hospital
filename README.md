@@ -36,7 +36,7 @@ SanitasFlow permite a los pacientes explorar el catálogo de servicios, crear un
 
 ## Página web
 
-**Enlace:** [SanitasFlow](https://gestor-de-citas-para-hospital.onrender.com/)
+**Enlace:** [SanitasFlow](https://gestor-de-citas-para-hospital-1.onrender.com)
 
 ## Consideraciones
 
