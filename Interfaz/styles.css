@@ -128,6 +128,16 @@ button {
     flex-wrap: wrap;
 }
 
+.staff-header-actions {
+    margin-left: auto;
+    justify-content: flex-end;
+}
+
+.staff-user-name {
+    color: #fff;
+    font-weight: 700;
+}
+
 .header-user {
     display: inline-flex;
     align-items: center;
@@ -738,6 +748,24 @@ textarea:focus {
 .btn-danger { background: #fff1ef; color: #9b241d; border-color: #e8b7b1; }
 .btn-danger:hover { background: #ffe2de; }
 .appointment-actions .btn-danger { min-height: 0; padding: 3px 10px; border-radius: 999px; font-size: 0.78rem; line-height: 1.6; }
+.cancellation-details-footer { display: flex; justify-content: center; margin-top: 14px; }
+.cancellation-details-link { color: var(--brand); font-size: 0.88rem; text-decoration: underline; }
+.staff-shell { max-width: 1100px; }
+.staff-heading { margin-bottom: 20px; }
+.staff-list-panel { margin-bottom: 20px; }
+.staff-section-title { text-align: left; }
+.staff-brand-note { margin-left: 8px; color: #b8d7ff; font: 600 0.7rem Arial, sans-serif; letter-spacing: 0.12em; }
+.badge-pending { color: #805b04; background: #fff1c9; border: 1px solid #e6c770; }
+.badge-rejected { color: #9b241d; background: #fff1ef; border: 1px solid #e8b7b1; }
+.staff-appointments { display: grid; gap: 12px; }
+.staff-appointment-card { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px; border: 1px solid var(--line); border-radius: var(--radius); }
+.staff-appointment-card p { margin: 8px 0 0; color: var(--muted); }
+.staff-assignment-summary { color: var(--brand-dark) !important; font-weight: 700; }
+.staff-cancellation-reason { padding: 10px 12px; border-left: 3px solid var(--accent); background: var(--surface-soft); }
+.staff-registration-form { display: grid; gap: 16px; }
+.staff-registration-form .field { display: grid; gap: 6px; }
+.staff-registration-form input, .staff-registration-form select { min-height: 44px; padding: 10px; border: 1px solid var(--line); border-radius: var(--radius); }
+.staff-login-panel { max-width: 700px; margin: 0 auto; }
 
 .donation-section { background: #eef5ff; }
 .donation-content { display: flex; align-items: center; justify-content: space-between; gap: 28px; }

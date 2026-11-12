@@ -9,7 +9,7 @@ using SanitasFlow.Api.Models;
 namespace SanitasFlow.Api.Controllers;
 
 [ApiController]
-[Authorize]
+[Authorize(Policy = "PatientOnly")]
 [Route("api/pacientes")]
 public class PacientesController(AppDbContext context) : ControllerBase
 {
@@ -27,6 +27,6 @@ public class PacientesController(AppDbContext context) : ControllerBase
         paciente.ApellidoMaterno = request.ApellidoMaterno?.Trim() ?? string.Empty;
         paciente.Edad = request.Edad;
         await context.SaveChangesAsync();
-        return Ok(new PatientResponse(paciente.Id, paciente.Nombres, paciente.ApellidoPaterno, paciente.ApellidoMaterno, paciente.Edad, paciente.Correo));
+        return Ok(new PatientResponse(paciente.Id, paciente.Nombres, paciente.ApellidoPaterno, paciente.ApellidoMaterno, paciente.Edad, paciente.Correo, paciente.NombreUsuario));
     }
 }

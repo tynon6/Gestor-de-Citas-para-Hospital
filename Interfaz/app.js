@@ -154,6 +154,7 @@ function nextAvailableDates(count) {
     const dates = [];
     const cursor = new Date();
     cursor.setHours(0, 0, 0, 0);
+    cursor.setDate(cursor.getDate() + 1);
     while (dates.length < count) {
         const windows = WORKING_WINDOWS[cursor.getDay()];
         if (windows && windows.length) {
@@ -186,6 +187,11 @@ async function generateSlots(date, procedureId, resourceId) {
 const API_BASE_URL = "/api";
 let currentSession = null;
 
+function authArea() {
+    const page = document.body?.dataset.page;
+    return page === "acceso-medico" || page === "agenda-medica" ? "staff" : "patient";
+}
+
 async function api(path, options = {}) {
     const headers = { Accept: "application/json", ...(options.headers || {}) };
     if (options.body) headers["Content-Type"] = "application/json";
@@ -202,7 +208,7 @@ async function api(path, options = {}) {
 
 async function refreshSession() {
     try {
-        currentSession = await api("/auth/me");
+        currentSession = await api(`/auth/me?area=${authArea()}`);
     } catch (error) {
         currentSession = null;
     }
@@ -219,7 +225,7 @@ function setSession(user) {
 
 async function clearSession() {
     try {
-        await api("/auth/logout", { method: "POST" });
+        await api(`/auth/logout?area=${authArea()}`, { method: "POST" });
     } catch (error) {
         // La cookie puede haber expirado; aun así se limpia el estado visual.
     }
@@ -236,9 +242,9 @@ async function registerUser(fields) {
 }
 
 async function loginUser(correo, password) {
-    const user = await api("/auth/login", {
+    const user = await api(`/auth/login?area=${authArea()}`, {
         method: "POST",
-        body: JSON.stringify({ correo, password })
+        body: JSON.stringify({ identificador: correo, password })
     });
     setSession(user);
     return user;
@@ -257,7 +263,7 @@ function renderHeaderAuth() {
     if (session) {
         const name = document.createElement("a");
         name.className = "header-user";
-        name.href = "bienvenida-paciente.html";
+        name.href = session.rol === "Medico" || session.rol === "Enfermero" ? "agenda-medica.html" : "bienvenida-paciente.html";
         name.textContent = session.nombres;
         name.title = "Ver mis datos y mis próximas citas";
         slot.append(name);
@@ -288,6 +294,10 @@ function renderHeaderAuth() {
 
 function requireSession(redirectTo) {
     const session = getSession();
+    if (session?.rol === "Medico" || session?.rol === "Enfermero") {
+        window.location.href = "agenda-medica.html";
+        return null;
+    }
     if (!session) {
         const next = encodeURIComponent(redirectTo || window.location.href);
         window.location.href = `registro-paciente.html?tab=registro&next=${next}`;
@@ -512,7 +522,7 @@ function initPagoCita() {
         msg.textContent = "";
         msg.className = "message";
 
-        // La API crea un pago simulado. Una pasarela real debe reemplazar
+        // La API registra el pago asociado a la cita.
         // este paso y confirmar la cita únicamente tras aprobar el cargo.
 
         try {
@@ -594,7 +604,6 @@ async function initBienvenida() {
 
     if (!bookings.length) {
         empty.classList.remove("hidden");
-        return;
     }
 
     for (const booking of bookings) {
@@ -612,8 +621,12 @@ async function initBienvenida() {
         content.append(title, details);
         main.append(content);
         const badge = document.createElement("span");
-        badge.className = "badge badge-confirmed";
-        badge.textContent = booking.estado;
+        badge.className = cancelled
+            ? booking.estado === "Rechazada" ? "badge badge-rejected" : "badge"
+            : booking.estado === "Pendiente" ? "badge badge-pending" : "badge badge-confirmed";
+        badge.textContent = cancelled
+            ? booking.estado === "Rechazada" ? "No aceptada" : "Cancelada"
+            : booking.estado;
         const actions = document.createElement("div");
         actions.className = "appointment-actions";
         const policyMessage = document.createElement("p");
@@ -621,13 +634,10 @@ async function initBienvenida() {
         policyMessage.setAttribute("aria-live", "polite");
         const flow = document.createElement("div");
         flow.className = "cancellation-flow hidden";
-        const policyLink = document.createElement("a");
-        policyLink.href = "detalles-cancelacion.html";
-        policyLink.textContent = "Detalles de cancelación";
         actions.append(badge);
         card.append(main, actions);
 
-        if (booking.estado !== "Cancelada") {
+        if (booking.estado !== "Cancelada" && booking.estado !== "Rechazada") {
             const cancelButton = document.createElement("button");
             cancelButton.type = "button";
             cancelButton.className = "btn btn-danger";
@@ -717,7 +727,7 @@ async function initBienvenida() {
                             const resultMessage = document.createElement("p");
                             resultMessage.className = "message ok";
                             resultMessage.textContent = result.porcentajeReembolso > 0
-                                ? `${result.mensaje} Reembolso simulado: $${result.montoReembolso.toFixed(2)} MXN.`
+                                ? `${result.mensaje} Reembolso: $${result.montoReembolso.toFixed(2)} MXN.`
                                 : `${result.mensaje} No se registró devolución.`;
                             flow.append(resultMessage);
                             if (reschedule.checked) {
@@ -737,9 +747,23 @@ async function initBienvenida() {
                 flow.append(continueButton, closeButton);
             });
         }
-        card.append(policyMessage, flow, policyLink);
+        card.append(policyMessage, flow);
+        if (booking.estado === "Rechazada") {
+            const refundNotice = document.createElement("p");
+            refundNotice.className = "appointment-policy warning";
+            refundNotice.textContent = `La cita fue rechazada por falta de disponibilidad. Reembolso calculado: $${Number(booking.precio).toFixed(2)} MXN (100%).`;
+            card.append(refundNotice);
+        }
         list.append(card);
     }
+    const policyLink = document.createElement("a");
+    policyLink.href = "detalles-cancelacion.html";
+    policyLink.className = "cancellation-details-link";
+    policyLink.textContent = "Detalles de cancelación";
+    const policyFooter = document.createElement("div");
+    policyFooter.className = "cancellation-details-footer";
+    policyFooter.append(policyLink);
+    list.after(policyFooter);
 }
 
 function initCancelacion() {
@@ -776,6 +800,159 @@ function initDonar() {
             submitButton.disabled = false;
         }
     });
+}
+
+async function initAccesoMedico() {
+    const session = getSession();
+    if (session?.rol === "Medico" || session?.rol === "Enfermero") {
+        window.location.href = "agenda-medica.html";
+        return;
+    }
+    $("#staff-login-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const message = $("#staff-login-message");
+        message.textContent = "";
+        try {
+            const user = await loginUser($("#staff-login-user").value.trim(), $("#staff-login-password").value);
+            if (user.rol !== "Medico" && user.rol !== "Enfermero") {
+                await clearSession();
+                throw new Error("Esta página es solo para personal médico y de enfermería.");
+            }
+            window.location.href = "agenda-medica.html";
+        } catch (error) {
+            message.textContent = error.message;
+            message.className = "message error";
+        }
+    });
+}
+
+async function initAgendaMedica() {
+    const session = getSession();
+    if (session?.rol !== "Medico" && session?.rol !== "Enfermero") {
+        window.location.href = "acceso-medico.html";
+        return;
+    }
+    $("#staff-welcome").textContent = session.nombres;
+    $("#staff-logout").addEventListener("click", async () => {
+        await clearSession();
+        window.location.href = "acceso-medico.html";
+    });
+    const doctorPanel = $("#doctor-registration-panel");
+    if (session.rol === "Enfermero") {
+        doctorPanel.classList.remove("hidden");
+        $("#doctor-registration-form").addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const notice = $("#doctor-registration-message");
+            notice.textContent = "";
+            try {
+                const doctor = await api("/medicos", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        nombre: $("#doctor-first-name").value.trim(),
+                        apellidoPaterno: $("#doctor-last-name").value.trim(),
+                        apellidoMaterno: $("#doctor-second-last-name").value.trim(),
+                        edad: Number($("#doctor-age").value), sexo: $("#doctor-sex").value,
+                        especialidadId: $("#doctor-specialty").value,
+                        correo: $("#doctor-email").value.trim(), nombreUsuario: $("#doctor-username").value.trim(),
+                        password: $("#doctor-password").value
+                    })
+                });
+                notice.className = "message ok";
+                notice.textContent = `Se creó la cuenta de ${doctor.nombre} ${doctor.apellidoPaterno}.`;
+                event.target.reset();
+            } catch (error) {
+                notice.className = "message error";
+                notice.textContent = error.message;
+            }
+        });
+    }
+    const pendingList = $("#staff-pending-list");
+    const confirmedList = $("#staff-confirmed-list");
+    const cancelledList = $("#staff-cancelled-list");
+    const message = $("#staff-agenda-message");
+    const makeAppointmentCard = (booking, pending, cancelled = false) => {
+        const card = document.createElement("article");
+        card.className = "staff-appointment-card";
+        const heading = document.createElement("strong");
+        heading.textContent = `${booking.especialidad} · ${booking.procedimiento || "Consulta"}`;
+        const detail = document.createElement("p");
+        const date = new Date(`${booking.fecha}T00:00:00`);
+        detail.textContent = `${booking.paciente} · ${date.toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" })} · ${minutesToLabel(booking.inicioMin)} - ${minutesToLabel(booking.finMin)}`;
+        const content = document.createElement("div");
+        content.append(heading, detail);
+        if (session.rol === "Enfermero" && pending && booking.resumenAsignacion) {
+            const assignment = document.createElement("p");
+            assignment.className = "staff-assignment-summary";
+            assignment.textContent = booking.resumenAsignacion;
+            content.append(assignment);
+        }
+        if (session.rol === "Enfermero" && !pending && !cancelled && booking.medico) {
+            const acceptedBy = document.createElement("p");
+            acceptedBy.className = "staff-assignment-summary";
+            acceptedBy.textContent = `Aceptó: ${booking.medico}`;
+            content.append(acceptedBy);
+        }
+        if (cancelled && booking.motivoCancelacion) {
+            const reason = document.createElement("p");
+            reason.className = "staff-cancellation-reason";
+            reason.textContent = booking.estado === "Rechazada"
+                ? `Resultado: ${booking.motivoCancelacion}`
+                : `Motivo de cancelación: ${booking.motivoCancelacion}`;
+            content.append(reason);
+        }
+        card.append(content);
+        if (pending && session.rol === "Medico") {
+            const actions = document.createElement("div");
+            actions.className = "actions";
+            for (const [label, action, cssClass] of [["Aceptar cita", "aceptar", "btn-success"], ["Rechazar cita", "rechazar", "btn-danger"]]) {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = `btn ${cssClass}`;
+                button.textContent = label;
+                button.addEventListener("click", async () => {
+                    button.disabled = true;
+                    message.textContent = "";
+                    try {
+                        const result = await api(`/agenda-medica/citas/${booking.id}/${action}`, { method: "POST" });
+                        message.className = "message ok";
+                        message.textContent = action === "aceptar"
+                            ? "Cita aceptada y agregada a la agenda confirmada."
+                            : result.reasignada ? "Cita enviada al siguiente médico disponible."
+                                : "No hay otro médico disponible. La cita se rechazó y se registró el reembolso total calculado.";
+                        await loadAgenda();
+                    } catch (error) {
+                        message.className = "message error";
+                        message.textContent = error.message;
+                        button.disabled = false;
+                    }
+                });
+                actions.append(button);
+            }
+            card.append(actions);
+        }
+        return card;
+    };
+    const loadAgenda = async () => {
+        pendingList.replaceChildren();
+        confirmedList.replaceChildren();
+        cancelledList.replaceChildren();
+        message.textContent = "Cargando agenda…";
+        try {
+            const result = await api("/agenda-medica/citas");
+            $("#staff-pending-empty").classList.toggle("hidden", result.pendientes.length !== 0);
+            $("#staff-confirmed-empty").classList.toggle("hidden", result.confirmadas.length !== 0);
+            $("#staff-cancelled-empty").classList.toggle("hidden", result.canceladas.length !== 0);
+            result.pendientes.forEach(item => pendingList.append(makeAppointmentCard(item, true)));
+            result.confirmadas.forEach(item => confirmedList.append(makeAppointmentCard(item, false)));
+            result.canceladas.forEach(item => cancelledList.append(makeAppointmentCard(item, false, true)));
+            message.textContent = "";
+        } catch (error) {
+            message.className = "message error";
+            message.textContent = error.message;
+        }
+    };
+    await loadAgenda();
+    window.setInterval(() => void loadAgenda(), 15000);
 }
 
 /* ---------------------------------------------------------------------
@@ -836,7 +1013,9 @@ function initRegistro() {
         msg.className = "message";
         try {
             await loginUser($("#login-correo").value.trim(), $("#login-password").value);
-            window.location.href = resolveNext(next);
+            const user = getSession();
+            window.location.href = user?.rol === "Medico" || user?.rol === "Enfermero"
+                ? "agenda-medica.html" : resolveNext(next);
         } catch (err) {
             msg.textContent = err.message;
             msg.className = "message error";
@@ -855,6 +1034,7 @@ function initRegistro() {
                 apellidoMaterno: $("#reg-materno").value.trim(),
                 edad: $("#reg-edad").value,
                 correo: $("#reg-correo").value.trim(),
+                nombreUsuario: $("#reg-usuario").value.trim(),
                 password: $("#reg-password").value
             });
             window.location.href = resolveNext(next);
@@ -898,6 +1078,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         cancelacion: initCancelacion,
         donativos: initDonativos,
         donar: initDonar,
+        "acceso-medico": initAccesoMedico,
+        "agenda-medica": initAgendaMedica,
         "perfil-paciente": initPerfil,
         registro: initRegistro
     };

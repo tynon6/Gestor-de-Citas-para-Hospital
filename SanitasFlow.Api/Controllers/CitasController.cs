@@ -10,7 +10,7 @@ using SanitasFlow.Api.Services;
 namespace SanitasFlow.Api.Controllers;
 
 [ApiController]
-[Authorize]
+[Authorize(Policy = "PatientOnly")]
 [Route("api/citas")]
 public class CitasController(AppDbContext context, CitaService citaService, CancellationPolicyService cancellationPolicy) : ControllerBase
 {

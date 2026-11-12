@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SanitasFlow - Acceso del personal</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="acceso-medico">
+    <header class="site-header"><a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">✚</span>SanitasFlow</a></header>
+    <main class="page-shell narrow-shell">
+        <section class="panel staff-login-panel">
+            <p class="eyebrow">Área privada</p>
+            <h1 class="section-heading">Acceso del personal médico</h1>
+            <p class="section-desc">Inicia sesión con tu correo o nombre de usuario institucional.</p>
+            <div id="staff-login-message" class="message" role="status"></div>
+            <form id="staff-login-form" class="donation-form">
+                <div class="field"><label for="staff-login-user">Correo o nombre de usuario</label><input id="staff-login-user" autocomplete="username" required></div>
+                <div class="field"><label for="staff-login-password">Contraseña</label><input id="staff-login-password" type="password" autocomplete="current-password" required></div>
+                <button class="btn btn-primary" type="submit">Entrar al área privada</button>
+            </form>
+        </section>
+    </main>
+    <footer class="footer"><p>SanitasFlow © 2026</p></footer>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SanitasFlow - Agenda del personal</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="agenda-medica">
+    <header class="site-header">
+        <a class="brand" href="agenda-medica.html"><span class="brand-mark" aria-hidden="true">✚</span>SanitasFlow <span class="staff-brand-note">PERSONAL</span></a>
+        <div class="header-actions staff-header-actions"><span id="staff-welcome" class="staff-user-name"></span><button id="staff-logout" class="link-ghost" type="button">Cerrar sesión</button></div>
+    </header>
+    <main class="page-shell staff-shell">
+        <section class="staff-heading">
+            <p class="eyebrow">Agenda interna</p>
+            <h1 class="section-heading">Administrar citas</h1>
+            <p class="section-desc">Revisa solicitudes pendientes y las citas confirmadas.</p>
+        </section>
+        <section class="panel staff-list-panel">
+            <h2 class="card-title staff-section-title">Solicitudes pendientes</h2>
+            <p id="staff-pending-empty" class="message hidden">No hay citas pendientes.</p>
+            <div id="staff-pending-list" class="staff-appointments"></div>
+        </section>
+        <section class="panel staff-list-panel">
+            <h2 class="card-title staff-section-title">Citas confirmadas</h2>
+            <p id="staff-confirmed-empty" class="message hidden">Todavía no hay citas confirmadas.</p>
+            <div id="staff-confirmed-list" class="staff-appointments"></div>
+        </section>
+        <section class="panel staff-list-panel">
+            <h2 class="card-title staff-section-title">Citas canceladas</h2>
+            <p id="staff-cancelled-empty" class="message hidden">Todavía no hay citas canceladas.</p>
+            <div id="staff-cancelled-list" class="staff-appointments"></div>
+            <p class="section-desc">La agenda se actualiza automáticamente cada 15 segundos.</p>
+        </section>
+        <section class="panel staff-list-panel hidden" id="doctor-registration-panel">
+            <h2 class="card-title staff-section-title">Dar de alta a un médico</h2>
+            <p class="section-desc">Completa los datos del médico y crea su acceso individual.</p>
+            <form id="doctor-registration-form" class="staff-registration-form">
+                <div class="form-grid-3">
+                    <div class="field"><label for="doctor-first-name">Nombre(s)</label><input id="doctor-first-name" required></div>
+                    <div class="field"><label for="doctor-last-name">Apellido paterno</label><input id="doctor-last-name" required></div>
+                    <div class="field"><label for="doctor-second-last-name">Apellido materno</label><input id="doctor-second-last-name" required></div>
+                </div>
+                <div class="form-grid">
+                    <div class="field"><label for="doctor-age">Edad</label><input id="doctor-age" type="number" min="26" max="60" required></div>
+                    <div class="field"><label for="doctor-sex">Sexo</label><select id="doctor-sex" required><option value="">Selecciona</option><option>Mujer</option><option>Hombre</option></select></div>
+                    <div class="field"><label for="doctor-specialty">Especialidad</label><select id="doctor-specialty" required><option value="general">Cita general</option><option value="cardiologia">Cardiología</option><option value="dermatologia">Dermatología</option><option value="pediatria">Pediatría</option><option value="ginecologia">Ginecología</option><option value="traumatologia">Traumatología</option></select></div>
+                </div>
+                <div class="form-grid">
+                    <div class="field"><label for="doctor-email">Correo</label><input id="doctor-email" type="email" required></div>
+                    <div class="field"><label for="doctor-username">Nombre de usuario</label><input id="doctor-username" minlength="3" maxlength="40" required></div>
+                </div>
+                <div class="field"><label for="doctor-password">Contraseña inicial</label><input id="doctor-password" type="password" minlength="8" required></div>
+                <p id="doctor-registration-message" class="message" role="status"></p>
+                <button class="btn btn-primary" type="submit">Crear cuenta médica</button>
+            </form>
+        </section>
+        <p id="staff-agenda-message" class="message" role="status"></p>
+    </main>
+    <footer class="footer"><p>SanitasFlow © 2026</p></footer>
+    <script src="app.js"></script>
+</body>
+</html>

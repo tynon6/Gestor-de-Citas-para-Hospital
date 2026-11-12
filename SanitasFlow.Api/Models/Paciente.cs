@@ -8,6 +8,7 @@ public class Paciente
     public string ApellidoMaterno { get; set; } = string.Empty;
     public int Edad { get; set; }
     public string Correo { get; set; } = string.Empty;
+    public string NombreUsuario { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public DateTime CreadoEnUtc { get; set; } = DateTime.UtcNow;
     public List<Cita> Citas { get; set; } = [];

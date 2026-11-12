@@ -28,25 +28,45 @@ namespace SanitasFlow.Api.Services
         public async Task<List<int>> ObtenerHorariosDisponiblesAsync(string especialidadId, string procedimientoId, DateOnly fecha, CancellationToken cancellationToken)
         {
             var procedimiento = await ObtenerProcedimientoAsync(especialidadId, procedimientoId, cancellationToken);
-            var ocupadas = await ObtenerCitasOcupadasAsync(especialidadId, fecha, cancellationToken);
-            return CalcularHorarios(fecha, procedimiento.DuracionMin, ocupadas);
+            var doctors = await _context.Medicos.AsNoTracking()
+                .Where(m => m.EspecialidadId == especialidadId).Select(m => m.Id).ToListAsync(cancellationToken);
+            if (doctors.Count == 0) return [];
+            var occupied = await ObtenerCitasOcupadasAsync(especialidadId, fecha, cancellationToken);
+            var possibleSlots = CalcularHorarios(fecha, procedimiento.DuracionMin, []);
+            return possibleSlots.Where(start => doctors.Any(doctorId => occupied
+                .Where(c => c.MedicoId == doctorId)
+                .All(c => !SeTraslapan(start, start + procedimiento.DuracionMin, c.InicioMin, c.FinMin))))
+                .ToList();
         }
 
         public async Task<Cita> CrearCitaAsync(int pacienteId, string especialidadId, string procedimientoId, DateOnly fecha, int inicioMin, string motivo, CancellationToken cancellationToken)
         {
+            var fechaMinima = DateOnly.FromDateTime(DateTime.Today).AddDays(1);
+            if (fecha < fechaMinima)
+            {
+                throw new InvalidOperationException("Solo se pueden agendar citas a partir de mañana.");
+            }
+
             await using var transaction = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
             var procedimiento = await ObtenerProcedimientoAsync(especialidadId, procedimientoId, cancellationToken);
-            var ocupadas = await ObtenerCitasOcupadasAsync(especialidadId, fecha, cancellationToken);
             var finMin = inicioMin + procedimiento.DuracionMin;
 
-            if (!CalcularHorarios(fecha, procedimiento.DuracionMin, ocupadas).Contains(inicioMin))
+            var doctors = await _context.Medicos
+                .Where(m => m.EspecialidadId == especialidadId).ToListAsync(cancellationToken);
+            var occupied = await ObtenerCitasOcupadasAsync(especialidadId, fecha, cancellationToken);
+            var availableDoctors = doctors.Where(doctor => occupied.Where(c => c.MedicoId == doctor.Id)
+                .All(c => !SeTraslapan(inicioMin, finMin, c.InicioMin, c.FinMin))).ToList();
+            if (inicioMin < 0 || !CalcularHorarios(fecha, procedimiento.DuracionMin, []).Contains(inicioMin) || availableDoctors.Count == 0)
             {
                 throw new InvalidOperationException("El horario solicitado ya no está disponible o queda fuera del horario de atención.");
             }
 
+            var assignedDoctor = availableDoctors[Random.Shared.Next(availableDoctors.Count)];
+
             var cita = new Cita
             {
                 PacienteId = pacienteId,
+                MedicoId = assignedDoctor.Id,
                 EspecialidadId = especialidadId,
                 ProcedimientoId = procedimientoId,
                 Fecha = fecha,
@@ -54,7 +74,7 @@ namespace SanitasFlow.Api.Services
                 FinMin = finMin,
                 Motivo = motivo.Trim(),
                 Precio = procedimiento.Precio,
-                Estado = "Confirmada"
+                Estado = "Pendiente"
             };
             _context.Citas.Add(cita);
             _context.Pagos.Add(new Pago
@@ -79,24 +99,25 @@ namespace SanitasFlow.Api.Services
         {
             return await _context.Citas
                 .Where(c => c.EspecialidadId == especialidadId && c.Fecha == fecha && c.Estado != "Cancelada")
+                .Where(c => c.Estado != "Rechazada")
                 .ToListAsync(cancellationToken);
         }
 
+        private static bool SeTraslapan(int inicioUno, int finUno, int inicioDos, int finDos) => inicioUno < finDos && finUno > inicioDos;
+
         private static List<int> CalcularHorarios(DateOnly fecha, int duracionMin, List<Cita> ocupadas)
         {
-            if (fecha < DateOnly.FromDateTime(DateTime.Today) || !Horarios.TryGetValue(fecha.DayOfWeek, out var ventanas))
+            var fechaMinima = DateOnly.FromDateTime(DateTime.Today).AddDays(1);
+            if (fecha < fechaMinima || !Horarios.TryGetValue(fecha.DayOfWeek, out var ventanas))
             {
                 return [];
             }
 
-            var hoy = fecha == DateOnly.FromDateTime(DateTime.Today);
-            var ahoraMin = DateTime.Now.Hour * 60 + DateTime.Now.Minute;
             var resultado = new List<int>();
             foreach (var (inicio, fin) in ventanas)
             {
                 for (var hora = inicio; hora + duracionMin <= fin; hora += 15)
                 {
-                    if (hoy && hora <= ahoraMin) continue;
                     if (ocupadas.Any(c => hora < c.FinMin && hora + duracionMin > c.InicioMin)) continue;
                     resultado.Add(hora);
                 }

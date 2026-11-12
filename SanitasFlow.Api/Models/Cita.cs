@@ -4,6 +4,7 @@ namespace SanitasFlow.Api.Models
     {
         public int Id { get; set; }
         public int PacienteId { get; set; }
+        public int? MedicoId { get; set; }
         public string EspecialidadId { get; set; } = string.Empty;
         public string ProcedimientoId { get; set; } = string.Empty;
         public DateOnly Fecha { get; set; }
@@ -19,6 +20,7 @@ namespace SanitasFlow.Api.Models
         public decimal? MontoReembolso { get; set; }
         public DateTime CreadaEnUtc { get; set; } = DateTime.UtcNow;
         public Paciente Paciente { get; set; } = null!;
+        public Medico? Medico { get; set; }
         public Especialidad Especialidad { get; set; } = null!;
         public Procedimiento Procedimiento { get; set; } = null!;
         public List<Pago> Pagos { get; set; } = [];
