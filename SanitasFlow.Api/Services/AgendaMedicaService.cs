@@ -13,7 +13,15 @@ public class AgendaMedicaService(AppDbContext context, AgendaMedicaContext agend
         if (cita.Estado is not ("Pendiente" or "Confirmada")) throw new InvalidOperationException("La cita ya no está pendiente.");
 
         if (cita.Estado == "Pendiente") cita.Estado = "Confirmada";
+        cita.ReasignacionUrgente = false;
+        cita.AvisoReasignacion = null;
         cita.Medico = await context.Medicos.SingleAsync(m => m.Id == medicoId, cancellationToken);
+        context.MovimientosPersonal.Add(new MovimientoPersonal
+        {
+            ActorRol = "Medico", ActorId = cita.Medico.Id, ActorUsuario = cita.Medico.NombreUsuario,
+            ActorNombre = DoctorOffboardingService.FullName(cita.Medico), Accion = "Aceptó cita", DestinoTipo = "Cita",
+            DestinoId = cita.Id, DestinoNombre = $"Cita #{cita.Id}", Detalle = $"Paciente: {cita.Paciente.Nombres} {cita.Paciente.ApellidoPaterno}; {cita.Fecha} {cita.InicioMin}.", FechaUtc = DateTime.UtcNow
+        });
         await context.SaveChangesAsync(cancellationToken);
 
         var registro = await agenda.CitasConfirmadas.SingleOrDefaultAsync(c => c.CitaId == cita.Id, cancellationToken);
@@ -42,18 +50,35 @@ public class AgendaMedicaService(AppDbContext context, AgendaMedicaContext agend
         if (cita.Estado != "Pendiente") throw new InvalidOperationException("La cita ya no está pendiente.");
 
         context.RechazosCita.Add(new RechazoCita { CitaId = cita.Id, MedicoId = medicoId });
+        var rejectingDoctor = cita.Medico ?? await context.Medicos.SingleAsync(m => m.Id == medicoId, cancellationToken);
+        var rejectingDoctorName = DoctorOffboardingService.FullName(rejectingDoctor);
+        context.MovimientosPersonal.Add(new MovimientoPersonal
+        {
+            ActorRol = "Medico", ActorId = rejectingDoctor.Id, ActorUsuario = rejectingDoctor.NombreUsuario,
+            ActorNombre = rejectingDoctorName, Accion = "Rechazó cita", DestinoTipo = "Cita", DestinoId = cita.Id,
+            DestinoNombre = $"Cita #{cita.Id}", Detalle = "La solicitud se revisó y se envió al siguiente médico disponible.", FechaUtc = DateTime.UtcNow
+        });
         await context.SaveChangesAsync(cancellationToken);
 
         var rejectedIds = await context.RechazosCita.Where(r => r.CitaId == cita.Id).Select(r => r.MedicoId).ToListAsync(cancellationToken);
-        var doctors = await context.Medicos.Where(m => m.EspecialidadId == cita.EspecialidadId && !rejectedIds.Contains(m.Id)).ToListAsync(cancellationToken);
+        var doctors = await context.Medicos.Where(m => m.Activo && m.EspecialidadId == cita.EspecialidadId && !rejectedIds.Contains(m.Id)).ToListAsync(cancellationToken);
         var otherAppointments = await context.Citas.Where(c => c.Id != cita.Id && c.EspecialidadId == cita.EspecialidadId && c.Fecha == cita.Fecha && c.Estado != "Cancelada" && c.Estado != "Rechazada").ToListAsync(cancellationToken);
         var available = doctors.Where(m => otherAppointments.Where(c => c.MedicoId == m.Id)
             .All(c => cita.InicioMin >= c.FinMin || cita.FinMin <= c.InicioMin)).ToList();
 
         if (available.Count > 0)
         {
-            cita.MedicoId = available[Random.Shared.Next(available.Count)].Id;
+            var replacement = available[Random.Shared.Next(available.Count)];
+            cita.MedicoId = replacement.Id;
             cita.Estado = "Pendiente";
+            cita.ReasignacionUrgente = false;
+            cita.AvisoReasignacion = null;
+            context.MovimientosPersonal.Add(new MovimientoPersonal
+            {
+                ActorRol = "Sistema", ActorUsuario = "sistema", ActorNombre = "SanitasFlow", Accion = "Reasignación tras rechazo",
+                DestinoTipo = "Cita", DestinoId = cita.Id, DestinoNombre = $"Cita #{cita.Id}",
+                Detalle = $"{rejectingDoctorName} rechazó la solicitud; se asignó a {DoctorOffboardingService.FullName(replacement)}.", FechaUtc = DateTime.UtcNow
+            });
             await context.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return (cita, true);

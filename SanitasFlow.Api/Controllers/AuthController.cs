@@ -16,6 +16,7 @@ public class AuthController(AppDbContext context, PasswordService passwords) : C
 {
     private const string PatientCookie = "PatientCookie";
     private const string StaffCookie = "StaffCookie";
+    private const string MasterCookie = "MasterCookie";
 
     [HttpPost("register")]
     public async Task<ActionResult<PatientResponse>> Register(RegisterRequest request)
@@ -30,7 +31,8 @@ public class AuthController(AppDbContext context, PasswordService passwords) : C
         }
         if (await context.Pacientes.AnyAsync(p => p.Correo == correo || p.NombreUsuario == nombreUsuario) ||
             await context.Medicos.AnyAsync(m => m.Correo == correo || m.NombreUsuario == nombreUsuario) ||
-            await context.Enfermeros.AnyAsync(n => n.Correo == correo || n.NombreUsuario == nombreUsuario))
+            await context.Enfermeros.AnyAsync(n => n.Correo == correo || n.NombreUsuario == nombreUsuario) ||
+            await context.CuentasMaestras.AnyAsync(a => a.NombreUsuario == nombreUsuario))
         {
             return Conflict(new { message = "El correo o nombre de usuario ya está registrado." });
         }
@@ -51,15 +53,23 @@ public class AuthController(AppDbContext context, PasswordService passwords) : C
     public async Task<ActionResult<object>> Login(LoginRequest request, [FromQuery] string area = "patient")
     {
         var identificador = request.Identificador.Trim().ToLowerInvariant();
+        if (area.Equals("master", StringComparison.OrdinalIgnoreCase))
+        {
+            var master = await context.CuentasMaestras.SingleOrDefaultAsync(account => account.Id == 1 && account.NombreUsuario == identificador);
+            if (master is null || !passwords.Verify(request.Password, master.PasswordHash))
+                return Unauthorized(new { message = "Usuario o contraseña incorrectos." });
+            await SignInMasterAsync(master);
+            return Ok(new { id = 1, nombres = "Cuenta maestra", nombreUsuario = master.NombreUsuario, rol = "Maestra" });
+        }
         if (area.Equals("staff", StringComparison.OrdinalIgnoreCase))
         {
-            var medico = await context.Medicos.SingleOrDefaultAsync(m => m.Correo == identificador || m.NombreUsuario == identificador);
+            var medico = await context.Medicos.SingleOrDefaultAsync(m => m.Activo && (m.Correo == identificador || m.NombreUsuario == identificador));
             if (medico is not null && passwords.Verify(request.Password, medico.PasswordHash))
             {
                 await SignInAsync(medico);
                 return Ok(new StaffResponse(medico.Id, FullDoctorName(medico), medico.NombreUsuario, medico.Correo, "Medico"));
             }
-            var nurse = await context.Enfermeros.SingleOrDefaultAsync(n => n.Correo == identificador || n.NombreUsuario == identificador);
+            var nurse = await context.Enfermeros.SingleOrDefaultAsync(n => n.Activo && (n.Correo == identificador || n.NombreUsuario == identificador));
             if (nurse is null || !passwords.Verify(request.Password, nurse.PasswordHash))
                 return Unauthorized(new { message = "Usuario/correo o contraseña incorrectos." });
             await SignInAsync(nurse);
@@ -81,13 +91,20 @@ public class AuthController(AppDbContext context, PasswordService passwords) : C
     public async Task<ActionResult<object>> Me([FromQuery] string area = "patient")
     {
         var isStaffArea = area.Equals("staff", StringComparison.OrdinalIgnoreCase);
-        if (!isStaffArea && !area.Equals("patient", StringComparison.OrdinalIgnoreCase))
+        var isMasterArea = area.Equals("master", StringComparison.OrdinalIgnoreCase);
+        if (!isStaffArea && !isMasterArea && !area.Equals("patient", StringComparison.OrdinalIgnoreCase))
             return BadRequest(new { message = "El área de sesión no es válida." });
 
-        var scheme = isStaffArea ? StaffCookie : PatientCookie;
+        var scheme = isMasterArea ? MasterCookie : isStaffArea ? StaffCookie : PatientCookie;
         var session = await HttpContext.AuthenticateAsync(scheme);
         var principal = session.Principal;
         if (!session.Succeeded || principal is null) return Unauthorized();
+
+        if (isMasterArea)
+        {
+            var master = await context.CuentasMaestras.SingleOrDefaultAsync(account => account.Id == 1);
+            return master is null ? Unauthorized() : Ok(new { id = 1, nombres = "Cuenta maestra", nombreUsuario = master.NombreUsuario, rol = "Maestra" });
+        }
 
         var rawId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!int.TryParse(rawId, out var id)) return Unauthorized();
@@ -95,12 +112,12 @@ public class AuthController(AppDbContext context, PasswordService passwords) : C
         if (isStaffArea && principal.IsInRole("Medico"))
         {
             var doctor = await context.Medicos.FindAsync(id);
-            return doctor is null ? Unauthorized() : Ok(new StaffResponse(doctor.Id, FullDoctorName(doctor), doctor.NombreUsuario, doctor.Correo, "Medico"));
+            return doctor is null || !doctor.Activo ? Unauthorized() : Ok(new StaffResponse(doctor.Id, FullDoctorName(doctor), doctor.NombreUsuario, doctor.Correo, "Medico"));
         }
         if (isStaffArea && principal.IsInRole("Enfermero"))
         {
             var nurse = await context.Enfermeros.FindAsync(id);
-            return nurse is null ? Unauthorized() : Ok(new StaffResponse(nurse.Id, FullNurseName(nurse), nurse.NombreUsuario, nurse.Correo, "Enfermero"));
+            return nurse is null || !nurse.Activo ? Unauthorized() : Ok(new StaffResponse(nurse.Id, FullNurseName(nurse), nurse.NombreUsuario, nurse.Correo, "Enfermero"));
         }
         if (isStaffArea) return Unauthorized();
 
@@ -115,6 +132,8 @@ public class AuthController(AppDbContext context, PasswordService passwords) : C
             await HttpContext.SignOutAsync(StaffCookie);
         else if (area.Equals("patient", StringComparison.OrdinalIgnoreCase))
             await HttpContext.SignOutAsync(PatientCookie);
+        else if (area.Equals("master", StringComparison.OrdinalIgnoreCase))
+            await HttpContext.SignOutAsync(MasterCookie);
         else
             return BadRequest(new { message = "El área de sesión no es válida." });
         return NoContent();
@@ -156,6 +175,17 @@ public class AuthController(AppDbContext context, PasswordService passwords) : C
         };
         var identity = new ClaimsIdentity(claims, StaffCookie);
         await HttpContext.SignInAsync(StaffCookie, new ClaimsPrincipal(identity));
+    }
+
+    private async Task SignInMasterAsync(CuentaMaestra account)
+    {
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, account.Id.ToString()),
+            new Claim(ClaimTypes.Name, account.NombreUsuario),
+            new Claim(ClaimTypes.Role, "Maestra")
+        };
+        await HttpContext.SignInAsync(MasterCookie, new ClaimsPrincipal(new ClaimsIdentity(claims, MasterCookie)));
     }
 
     private static string FullDoctorName(Medico doctor) => $"{doctor.Nombre} {doctor.ApellidoPaterno} {doctor.ApellidoMaterno}".Trim();

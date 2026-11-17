@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SanitasFlow - Acceso maestro</title><link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="acceso-maestra">
+    <header class="site-header"><a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">✚</span>SanitasFlow</a></header>
+    <main class="page-shell narrow-shell">
+        <section class="panel staff-login-panel">
+            <p class="eyebrow">Administración restringida</p><h1 class="section-heading">Acceso de cuenta maestra</h1>
+            <p class="section-desc">Ingresa con el usuario y la contraseña de la única cuenta maestra.</p>
+            <div id="master-login-message" class="message" role="status"></div>
+            <form id="master-login-form" class="donation-form">
+                <div class="field"><label for="master-login-user">Nombre de usuario</label><input id="master-login-user" autocomplete="username" required></div>
+                <div class="field"><label for="master-login-password">Contraseña</label><input id="master-login-password" type="password" autocomplete="current-password" required></div>
+                <button class="btn btn-primary" type="submit">Entrar al panel</button>
+            </form>
+        </section>
+    </main>
+    <footer class="footer"><p>SanitasFlow © 2026</p></footer><script src="app.js"></script>
+</body>
+</html>

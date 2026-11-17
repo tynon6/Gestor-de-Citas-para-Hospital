@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SanitasFlow - Panel maestro</title><link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="panel-maestra">
+    <header class="site-header"><a class="brand" href="panel-maestra.html"><span class="brand-mark" aria-hidden="true">✚</span>SanitasFlow <span class="staff-brand-note">ADMINISTRACIÓN</span></a><div class="header-actions staff-header-actions"><span class="staff-user-name">Cuenta maestra</span><button id="master-logout" class="link-ghost" type="button">Cerrar sesión</button></div></header>
+    <main class="page-shell staff-shell">
+        <section class="staff-heading"><p class="eyebrow">Administración general</p><h1 class="section-heading">Panel de control</h1><p class="section-desc">Consulta la actividad, el personal y las citas próximas.</p></section>
+        <p id="master-panel-message" class="message" role="status"></p>
+        <details class="master-section" id="master-requests-section">
+            <summary><span>Solicitudes de baja pendientes</span><span class="master-section-count" id="master-requests-count">0</span></summary>
+            <section class="panel staff-list-panel"><p id="master-requests-empty" class="message hidden">No hay solicitudes pendientes.</p><div id="master-requests-list" class="master-card-list"></div></section>
+        </details>
+        <details class="master-section" id="master-doctors-section">
+            <summary><span>Médicos</span><span class="master-section-count" id="master-doctors-count">0</span></summary>
+            <section class="panel staff-list-panel"><div id="master-doctors-list" class="master-card-list"></div></section>
+        </details>
+        <details class="master-section" id="master-nurses-section">
+            <summary><span>Enfermería</span><span class="master-section-count" id="master-nurses-count">0</span></summary>
+            <section class="panel staff-list-panel"><div id="master-nurses-list" class="master-card-list"></div></section>
+        </details>
+        <details class="master-section" id="master-appointments-section">
+            <summary><span>Citas próximas</span><span class="master-section-count" id="master-appointments-count">0</span></summary>
+            <section class="panel staff-list-panel"><div id="master-appointments-list" class="master-card-list"></div></section>
+        </details>
+        <details class="master-section" id="master-offboarding-section">
+            <summary><span>Citas procesadas por bajas</span><span class="master-section-count" id="master-offboarding-count">0</span></summary>
+            <section class="panel staff-list-panel"><div id="master-offboarding-appointments" class="master-card-list"></div></section>
+        </details>
+        <details class="master-section" id="master-movements-section">
+            <summary><span>Movimientos del personal</span><span class="master-section-count" id="master-movements-count">0</span></summary>
+            <section class="panel staff-list-panel"><div id="master-movements-list" class="master-card-list"></div></section>
+        </details>
+        <details class="master-section" id="master-deactivated-section">
+            <summary><span>Médicos dados de baja</span><span class="master-section-count" id="master-deactivated-count">0</span></summary>
+            <section class="panel staff-list-panel"><div id="master-deactivated-list" class="master-card-list"></div></section>
+        </details>
+    </main>
+    <footer class="footer"><p>SanitasFlow © 2026</p></footer><script src="app.js"></script>
+</body>
+</html>

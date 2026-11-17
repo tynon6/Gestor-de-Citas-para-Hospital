@@ -12,5 +12,6 @@ namespace SanitasFlow.Api.Models
         public string Correo { get; set; } = string.Empty;
         public string NombreUsuario { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
+        public bool Activo { get; set; } = true;
     }
 }

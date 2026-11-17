@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using SanitasFlow.Api.Models;
 using SanitasFlow.Api.Contracts;
 using SanitasFlow.Api.Services;
@@ -15,7 +16,7 @@ namespace SanitasFlow.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetMedicos()
         {
-            var medicos = await context.Medicos.AsNoTracking()
+            var medicos = await context.Medicos.AsNoTracking().Where(m => m.Activo)
                 .Select(m => new { m.Id, m.Nombre, m.ApellidoPaterno, m.ApellidoMaterno, m.Edad, m.Sexo, m.EspecialidadId, m.Correo, m.NombreUsuario })
                 .ToListAsync();
             return Ok(medicos);
@@ -35,7 +36,8 @@ namespace SanitasFlow.Api.Controllers
                 return BadRequest(new { message = "La especialidad no existe." });
             if (await context.Pacientes.AnyAsync(p => p.NombreUsuario == username || p.Correo == email, cancellationToken) ||
                 await context.Medicos.AnyAsync(m => m.NombreUsuario == username || m.Correo == email, cancellationToken) ||
-                await context.Enfermeros.AnyAsync(n => n.NombreUsuario == username || n.Correo == email, cancellationToken))
+                await context.Enfermeros.AnyAsync(n => n.NombreUsuario == username || n.Correo == email, cancellationToken) ||
+                await context.CuentasMaestras.AnyAsync(a => a.NombreUsuario == username, cancellationToken))
                 return Conflict(new { message = "El correo o nombre de usuario ya está registrado." });
 
             var doctor = new Medico
@@ -46,6 +48,17 @@ namespace SanitasFlow.Api.Controllers
                 PasswordHash = passwords.Hash(request.Password)
             };
             context.Medicos.Add(doctor);
+            await context.SaveChangesAsync(cancellationToken);
+            var nurseId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var nurse = await context.Enfermeros.SingleAsync(n => n.Id == nurseId, cancellationToken);
+            var doctorName = $"{doctor.Nombre} {doctor.ApellidoPaterno} {doctor.ApellidoMaterno}".Trim();
+            context.MovimientosPersonal.Add(new MovimientoPersonal
+            {
+                ActorRol = "Enfermero", ActorId = nurse.Id, ActorUsuario = nurse.NombreUsuario,
+                ActorNombre = $"{nurse.Nombre} {nurse.ApellidoPaterno} {nurse.ApellidoMaterno}".Trim(),
+                Accion = "Alta de médico", DestinoTipo = "Médico", DestinoId = doctor.Id,
+                DestinoNombre = doctorName, Detalle = $"Alta para {doctor.EspecialidadId}; cuenta {doctor.NombreUsuario}.", FechaUtc = DateTime.UtcNow
+            });
             await context.SaveChangesAsync(cancellationToken);
             return Created("api/medicos", new { doctor.Id, doctor.Nombre, doctor.ApellidoPaterno, doctor.ApellidoMaterno, doctor.Edad, doctor.Sexo, doctor.EspecialidadId, doctor.Correo, doctor.NombreUsuario });
         }

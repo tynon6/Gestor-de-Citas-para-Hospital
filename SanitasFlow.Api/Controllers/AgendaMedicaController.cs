@@ -70,6 +70,8 @@ public class AgendaMedicaController(AppDbContext context, AgendaMedicaContext ag
                     Procedimiento = appointment.Procedimiento.Nombre,
                     MedicoAsignado = assignedDoctor,
                     ResumenAsignacion = assignmentSummary
+                    ,appointment.ReasignacionUrgente
+                    ,appointment.AvisoReasignacion
                 });
             }
         }
@@ -86,6 +88,8 @@ public class AgendaMedicaController(AppDbContext context, AgendaMedicaContext ag
                 Paciente = $"{appointment.Paciente.Nombres} {appointment.Paciente.ApellidoPaterno}".Trim(),
                 Especialidad = appointment.Especialidad.Nombre,
                 Procedimiento = appointment.Procedimiento.Nombre
+                ,appointment.ReasignacionUrgente
+                ,appointment.AvisoReasignacion
             }));
         }
 

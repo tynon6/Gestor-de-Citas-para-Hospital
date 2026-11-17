@@ -189,6 +189,7 @@ let currentSession = null;
 
 function authArea() {
     const page = document.body?.dataset.page;
+    if (page === "acceso-maestra" || page === "panel-maestra") return "master";
     return page === "acceso-medico" || page === "agenda-medica" ? "staff" : "patient";
 }
 
@@ -592,21 +593,28 @@ async function initBienvenida() {
     $("#welcome-name").textContent = session.nombres;
 
     const list = $("#appointments-list");
-    const empty = $("#appointments-empty");
+    const pastList = $("#past-appointments-list");
+    const currentEmpty = $("#current-appointments-empty");
+    const pastEmpty = $("#past-appointments-empty");
+    const errorMessage = $("#appointments-error");
     let bookings;
     try {
         bookings = await api("/citas/mias");
     } catch (error) {
-        empty.textContent = error.message;
-        empty.classList.remove("hidden");
+        errorMessage.textContent = error.message;
+        errorMessage.classList.remove("hidden");
         return;
     }
 
-    if (!bookings.length) {
-        empty.classList.remove("hidden");
-    }
+    const today = dateKey(new Date());
+    const currentBookings = bookings.filter(booking =>
+        (booking.estado === "Pendiente" || booking.estado === "Confirmada") && booking.fecha >= today);
+    const pastBookings = bookings.filter(booking => !currentBookings.includes(booking))
+        .sort((first, second) => second.fecha.localeCompare(first.fecha) || second.inicioMin - first.inicioMin);
+    currentEmpty.classList.toggle("hidden", currentBookings.length > 0);
+    pastEmpty.classList.toggle("hidden", pastBookings.length > 0);
 
-    for (const booking of bookings) {
+    const renderBooking = (booking, destination, canCancel) => {
         const date = new Date(`${booking.fecha}T00:00:00`);
         const card = document.createElement("div");
         card.className = "appointment-card";
@@ -621,12 +629,11 @@ async function initBienvenida() {
         content.append(title, details);
         main.append(content);
         const badge = document.createElement("span");
-        badge.className = cancelled
-            ? booking.estado === "Rechazada" ? "badge badge-rejected" : "badge"
-            : booking.estado === "Pendiente" ? "badge badge-pending" : "badge badge-confirmed";
-        badge.textContent = cancelled
-            ? booking.estado === "Rechazada" ? "No aceptada" : "Cancelada"
-            : booking.estado;
+        badge.className = booking.estado === "Rechazada" ? "badge badge-rejected"
+            : booking.estado === "Cancelada" ? "badge"
+                : booking.estado === "Pendiente" ? "badge badge-pending" : "badge badge-confirmed";
+        badge.textContent = booking.estado === "Rechazada" ? "No aceptada"
+            : booking.estado === "Cancelada" ? "Cancelada" : booking.estado;
         const actions = document.createElement("div");
         actions.className = "appointment-actions";
         const policyMessage = document.createElement("p");
@@ -637,7 +644,7 @@ async function initBienvenida() {
         actions.append(badge);
         card.append(main, actions);
 
-        if (booking.estado !== "Cancelada" && booking.estado !== "Rechazada") {
+        if (canCancel && booking.estado !== "Cancelada" && booking.estado !== "Rechazada") {
             const cancelButton = document.createElement("button");
             cancelButton.type = "button";
             cancelButton.className = "btn btn-danger";
@@ -737,6 +744,9 @@ async function initBienvenida() {
                                 rebookLink.textContent = `Elegir nueva fecha y volver a pagar $${Number(booking.precio).toFixed(2)} MXN`;
                                 flow.append(rebookLink);
                             }
+                            pastList.prepend(card);
+                            currentEmpty.classList.toggle("hidden", list.children.length > 0);
+                            pastEmpty.classList.add("hidden");
                         } catch (error) {
                             policyMessage.textContent = error.message;
                             confirmButton.disabled = false;
@@ -754,8 +764,10 @@ async function initBienvenida() {
             refundNotice.textContent = `La cita fue rechazada por falta de disponibilidad. Reembolso calculado: $${Number(booking.precio).toFixed(2)} MXN (100%).`;
             card.append(refundNotice);
         }
-        list.append(card);
-    }
+        destination.append(card);
+    };
+    for (const booking of currentBookings) renderBooking(booking, list, true);
+    for (const booking of pastBookings) renderBooking(booking, pastList, false);
     const policyLink = document.createElement("a");
     policyLink.href = "detalles-cancelacion.html";
     policyLink.className = "cancellation-details-link";
@@ -763,7 +775,7 @@ async function initBienvenida() {
     const policyFooter = document.createElement("div");
     policyFooter.className = "cancellation-details-footer";
     policyFooter.append(policyLink);
-    list.after(policyFooter);
+    pastList.parentElement.after(policyFooter);
 }
 
 function initCancelacion() {
@@ -826,6 +838,143 @@ async function initAccesoMedico() {
     });
 }
 
+async function initAccesoMaestra() {
+    await refreshSession();
+    if (getSession()?.rol === "Maestra") {
+        window.location.href = "panel-maestra.html";
+        return;
+    }
+    $("#master-login-form").addEventListener("submit", async event => {
+        event.preventDefault();
+        const notice = $("#master-login-message");
+        notice.textContent = "";
+        try {
+            await loginUser($("#master-login-user").value.trim(), $("#master-login-password").value);
+            window.location.href = "panel-maestra.html";
+        } catch (error) {
+            notice.className = "message error";
+            notice.textContent = error.message;
+        }
+    });
+}
+
+async function initPanelMaestra() {
+    const session = await refreshSession();
+    if (session?.rol !== "Maestra") {
+        window.location.href = "acceso-maestra.html";
+        return;
+    }
+    $("#master-logout").addEventListener("click", async () => {
+        await clearSession();
+        window.location.href = "acceso-maestra.html";
+    });
+    const notice = $("#master-panel-message");
+    const card = (titleText, lines = []) => {
+        const element = document.createElement("details");
+        element.className = "master-item";
+        const summary = document.createElement("summary");
+        const heading = document.createElement("strong");
+        heading.textContent = titleText;
+        summary.append(heading);
+        if (lines[0]) {
+            const preview = document.createElement("span");
+            preview.className = "master-item-preview";
+            preview.textContent = lines[0];
+            summary.append(preview);
+        }
+        element.append(summary);
+        const body = document.createElement("div");
+        body.className = "master-item-body";
+        for (const lineText of lines) {
+            const line = document.createElement("p");
+            line.textContent = lineText;
+            body.append(line);
+        }
+        element.append(body);
+        return element;
+    };
+    const setCount = (id, count) => { $(`#${id}`).textContent = String(count); };
+    const load = async () => {
+        notice.textContent = "Cargando información…";
+        try {
+            const result = await api("/maestra/panel");
+            const requests = $("#master-requests-list");
+            const doctors = $("#master-doctors-list");
+            const nurses = $("#master-nurses-list");
+            const appointments = $("#master-appointments-list");
+            const movements = $("#master-movements-list");
+            const archived = $("#master-deactivated-list");
+            const reassignments = $("#master-offboarding-appointments");
+            for (const node of [requests, doctors, nurses, appointments, movements, archived, reassignments]) node.replaceChildren();
+
+            const pendingRequests = result.solicitudesBaja.filter(item => item.estado === "Pendiente");
+            setCount("master-requests-count", pendingRequests.length);
+            setCount("master-doctors-count", result.medicos.length);
+            setCount("master-nurses-count", result.enfermeros.length);
+            setCount("master-appointments-count", result.citas.length);
+            setCount("master-offboarding-count", result.citasProcesadasPorBaja.length);
+            setCount("master-movements-count", result.movimientos.length);
+            setCount("master-deactivated-count", result.medicosBaja.length);
+            $("#master-requests-empty").classList.toggle("hidden", pendingRequests.length > 0);
+            pendingRequests.forEach(item => {
+                const requestCard = card(`Solicitud de baja · ${item.medicoNombre}`, [`Solicitó: ${item.enfermeroNombre}`, `Motivo: ${item.motivo}`, `Fecha: ${new Date(item.creadaEnUtc).toLocaleString("es-MX")}`]);
+                const actions = document.createElement("div"); actions.className = "actions";
+                for (const [label, action, css] of [["Aprobar baja", "aprobar", "btn-danger"], ["Rechazar solicitud", "rechazar", "btn-secondary"]]) {
+                    const button = document.createElement("button"); button.type = "button"; button.className = `btn ${css}`; button.textContent = label;
+                    button.addEventListener("click", async () => {
+                        button.disabled = true;
+                        try {
+                            const input = action === "rechazar" ? { nota: window.prompt("Nota de revisión (opcional):") || "" } : {};
+                            await api(`/maestra/solicitudes-baja/${item.id}/${action}`, { method: "POST", body: JSON.stringify(input) });
+                            await load();
+                        } catch (error) { notice.className = "message error"; notice.textContent = error.message; button.disabled = false; }
+                    }); actions.append(button);
+                }
+                requestCard.append(actions); requests.append(requestCard);
+            });
+
+            result.medicos.forEach(item => {
+                const name = `${item.nombre} ${item.apellidoPaterno} ${item.apellidoMaterno}`.trim();
+                const element = card(name, [`${item.especialidad} · ${item.edad} años · ${item.sexo}`, `Usuario: ${item.nombreUsuario} · Correo: ${item.correo}`, `Estado: ${item.activo ? "Activo" : "Inactivo"}`]);
+                if (item.activo) {
+                    const button = document.createElement("button"); button.type = "button"; button.className = "btn btn-danger"; button.textContent = "Dar de baja";
+                    button.addEventListener("click", async () => {
+                        const reason = window.prompt(`Motivo para dar de baja a ${name} (mínimo 5 caracteres):`);
+                        if (!reason) return;
+                        button.disabled = true;
+                        try { await api(`/maestra/medicos/${item.id}/baja`, { method: "POST", body: JSON.stringify({ motivo: reason }) }); await load(); }
+                        catch (error) { notice.className = "message error"; notice.textContent = error.message; button.disabled = false; }
+                    }); element.append(button);
+                }
+                doctors.append(element);
+            });
+            result.enfermeros.forEach(item => {
+                const name = `${item.nombre} ${item.apellidoPaterno} ${item.apellidoMaterno}`.trim();
+                const element = card(name, [`${item.edad} años · Usuario: ${item.nombreUsuario}`, `Correo: ${item.correo} · Estado: ${item.activo ? "Activo" : "Inactivo"}`]);
+                if (item.activo) {
+                    const button = document.createElement("button"); button.type = "button"; button.className = "btn btn-danger"; button.textContent = "Dar de baja";
+                    button.addEventListener("click", async () => {
+                        const reason = window.prompt(`Motivo para dar de baja a ${name} (mínimo 5 caracteres):`);
+                        if (!reason) return;
+                        button.disabled = true;
+                        try { await api(`/maestra/enfermeros/${item.id}/baja`, { method: "POST", body: JSON.stringify({ motivo: reason }) }); await load(); }
+                        catch (error) { notice.className = "message error"; notice.textContent = error.message; button.disabled = false; }
+                    }); element.append(button);
+                }
+                nurses.append(element);
+            });
+            result.citas.forEach(item => appointments.append(card(`#${item.id} · ${item.especialidad} · ${item.estado}`, [`Paciente: ${item.paciente}`, `${item.fecha} · ${minutesToLabel(item.inicioMin)} · Médico: ${item.medico}`, ...(item.reasignacionUrgente ? [`URGENTE · ${item.avisoReasignacion}. Requiere su confirmación urgente.`] : [])])));
+            result.citasProcesadasPorBaja.forEach(item => reassignments.append(card(`#${item.citaId} · ${item.resultado}`, [`${item.paciente} · ${item.especialidad} · ${item.fecha} ${minutesToLabel(item.inicioMin)}`, `De ${item.medicoAnterior} a ${item.medicoDestino || "sin reasignación"}`, `Reembolso: ${item.porcentajeReembolso}% · $${Number(item.montoReembolso).toFixed(2)} MXN`])));
+            result.movimientos.forEach(item => movements.append(card(`${item.accion} · ${item.actorNombre} (${item.actorRol})`, [`${item.destinoTipo}: ${item.destinoNombre}`, item.detalle, new Date(item.fechaUtc).toLocaleString("es-MX")])));
+            result.medicosBaja.forEach(item => archived.append(card(item.nombre, [`Usuario: ${item.nombreUsuario} · ${item.especialidadId}`, `Motivo: ${item.motivo}`, `Solicitó: ${item.solicitadoPor} · Aprobó: ${item.aprobadoPor}`])));
+            notice.className = "message";
+            notice.textContent = "";
+        } catch (error) { notice.className = "message error"; notice.textContent = error.message; }
+    };
+    await load();
+    window.setInterval(() => void load(), 30000);
+}
+
 async function initAgendaMedica() {
     const session = getSession();
     if (session?.rol !== "Medico" && session?.rol !== "Enfermero") {
@@ -865,6 +1014,35 @@ async function initAgendaMedica() {
                 notice.textContent = error.message;
             }
         });
+        const offboardingPanel = $("#doctor-offboarding-panel");
+        offboardingPanel.classList.remove("hidden");
+        try {
+            const doctors = await api("/medicos");
+            const select = $("#offboarding-doctor");
+            doctors.forEach(doctor => {
+                const option = document.createElement("option");
+                option.value = doctor.id;
+                option.textContent = `${doctor.nombre} ${doctor.apellidoPaterno} ${doctor.apellidoMaterno} · ${doctor.especialidadId}`;
+                select.append(option);
+            });
+        } catch (error) {
+            $("#offboarding-message").textContent = error.message;
+        }
+        $("#doctor-offboarding-form").addEventListener("submit", async event => {
+            event.preventDefault();
+            const notice = $("#offboarding-message");
+            try {
+                await api(`/medicos/${Number($("#offboarding-doctor").value)}/solicitud-baja`, {
+                    method: "POST", body: JSON.stringify({ motivo: $("#offboarding-reason").value.trim() })
+                });
+                notice.className = "message ok";
+                notice.textContent = "Solicitud enviada. La baja quedará pendiente de aprobación maestra.";
+                event.target.reset();
+            } catch (error) {
+                notice.className = "message error";
+                notice.textContent = error.message;
+            }
+        });
     }
     const pendingList = $("#staff-pending-list");
     const confirmedList = $("#staff-confirmed-list");
@@ -885,6 +1063,12 @@ async function initAgendaMedica() {
             assignment.className = "staff-assignment-summary";
             assignment.textContent = booking.resumenAsignacion;
             content.append(assignment);
+        }
+        if (pending && booking.reasignacionUrgente) {
+            const urgentNotice = document.createElement("p");
+            urgentNotice.className = "urgent-appointment-notice";
+            urgentNotice.textContent = `URGENTE · ${booking.avisoReasignacion || "Reasignación de cita por baja de médico."}. Requiere su confirmación urgente.`;
+            content.append(urgentNotice);
         }
         if (session.rol === "Enfermero" && !pending && !cancelled && booking.medico) {
             const acceptedBy = document.createElement("p");
@@ -1079,6 +1263,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         donativos: initDonativos,
         donar: initDonar,
         "acceso-medico": initAccesoMedico,
+        "acceso-maestra": initAccesoMaestra,
+        "panel-maestra": initPanelMaestra,
         "agenda-medica": initAgendaMedica,
         "perfil-paciente": initPerfil,
         registro: initRegistro

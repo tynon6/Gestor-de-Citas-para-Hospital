@@ -9,25 +9,39 @@ public class CancellationPolicyService(AppDbContext context, AgendaMedicaContext
 {
     public CancellationQuoteResponse GetQuote(Cita cita, DateTimeOffset? now = null)
     {
-        var current = (now ?? DateTimeOffset.Now).LocalDateTime;
-        var appointmentAt = DateTime.SpecifyKind(
-            cita.Fecha.ToDateTime(TimeOnly.MinValue).AddMinutes(cita.InicioMin),
-            DateTimeKind.Local);
+        var zone = GetMexicoTimeZone();
+        var current = TimeZoneInfo.ConvertTime(now ?? DateTimeOffset.UtcNow, zone);
+        var bookedAt = TimeZoneInfo.ConvertTime(new DateTimeOffset(DateTime.SpecifyKind(cita.CreadaEnUtc, DateTimeKind.Utc)), zone);
+        var appointmentLocal = cita.Fecha.ToDateTime(TimeOnly.MinValue).AddMinutes(cita.InicioMin);
+        var appointmentAt = new DateTimeOffset(TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(appointmentLocal, DateTimeKind.Unspecified), zone));
         var remaining = appointmentAt - current;
-        var sameBookingDay = cita.CreadaEnUtc.ToLocalTime().Date == current.Date;
+        var sameBookingDay = bookedAt.Date == current.Date;
+        var nextDayBooking = cita.Fecha == DateOnly.FromDateTime(bookedAt.Date.AddDays(1));
+        var withinNextDayGrace = nextDayBooking && current >= bookedAt && current - bookedAt <= TimeSpan.FromHours(1);
         var canCancel = cita.Estado is not ("Cancelada" or "Rechazada") && remaining > TimeSpan.Zero;
 
-        var percentage = sameBookingDay ? 100 : remaining <= TimeSpan.FromHours(48) ? 0 : 80;
+        var percentage = nextDayBooking ? withinNextDayGrace ? 100 : 0
+            : sameBookingDay ? 100 : remaining <= TimeSpan.FromHours(48) ? 0 : 80;
         var refund = Math.Round(cita.Precio * percentage / 100m, 2, MidpointRounding.AwayFromZero);
         var message = !canCancel
             ? cita.Estado is "Cancelada" or "Rechazada" ? "Esta cita ya no se puede cancelar." : "Esta cita ya pasó y no se puede cancelar."
+            : nextDayBooking
+                ? withinNextDayGrace
+                    ? "Para una cita agendada para mañana, puedes cancelar durante la primera hora después de reservar y recibir el 100% de devolución. Después de esa hora, puedes cancelar sin devolución."
+                    : "Esta cita fue agendada para mañana y ya terminó la primera hora desde la reserva. Puedes cancelar, pero ya no aplica devolución."
             : sameBookingDay
                 ? "Si cancelas hoy, el sistema registrará un reembolso del 100% del pago."
                 : percentage == 0
                     ? "Ya estás dentro del periodo de 48 horas. Puedes cancelar, pero no se te regresará el dinero."
                     : "Al cancelar con más de 48 horas de anticipación, el sistema registrará un reembolso del 80%.";
 
-        return new CancellationQuoteResponse(canCancel, percentage, refund, cita.Precio, sameBookingDay, message);
+        return new CancellationQuoteResponse(canCancel, percentage, refund, cita.Precio, sameBookingDay || withinNextDayGrace, message);
+    }
+
+    private static TimeZoneInfo GetMexicoTimeZone()
+    {
+        try { return TimeZoneInfo.FindSystemTimeZoneById("America/Mexico_City"); }
+        catch (TimeZoneNotFoundException) { return TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time (Mexico)"); }
     }
 
     public async Task<CancellationQuoteResponse> CancelAsync(Cita cita, string motivoCancelacion, bool deseaReagendar, CancellationToken cancellationToken)

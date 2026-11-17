@@ -56,6 +56,15 @@
                 <button class="btn btn-primary" type="submit">Crear cuenta médica</button>
             </form>
         </section>
+        <section class="panel staff-list-panel hidden" id="doctor-offboarding-panel">
+            <h2 class="card-title staff-section-title">Solicitar baja de un médico</h2>
+            <p class="section-desc">La solicitud requiere revisión de la cuenta maestra. Las citas futuras se reasignarán cuando exista disponibilidad.</p>
+            <form id="doctor-offboarding-form" class="staff-registration-form">
+                <div class="field"><label for="offboarding-doctor">Médico</label><select id="offboarding-doctor" required><option value="">Selecciona un médico</option></select></div>
+                <div class="field"><label for="offboarding-reason">Motivo</label><textarea id="offboarding-reason" minlength="5" maxlength="1000" required></textarea></div>
+                <p id="offboarding-message" class="message" role="status"></p><button class="btn btn-danger" type="submit">Enviar solicitud de baja</button>
+            </form>
+        </section>
         <p id="staff-agenda-message" class="message" role="status"></p>
     </main>
     <footer class="footer"><p>SanitasFlow © 2026</p></footer>

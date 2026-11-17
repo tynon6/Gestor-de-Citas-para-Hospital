@@ -23,7 +23,7 @@
     <main class="page-shell narrow-shell">
         <section class="panel">
             <h1 class="section-heading">Hola, <span id="welcome-name">paciente</span></h1>
-            <p class="section-desc">Aquí puedes ver tus próximas citas y acceder a tus datos personales.</p>
+            <p class="section-desc">Consulta tus citas próximas y revisa el historial de atención.</p>
 
             <div class="actions" style="margin-bottom:22px;">
                 <a href="index.html" class="btn btn-secondary">Inicio</a>
@@ -31,9 +31,17 @@
                 <a href="perfil-paciente.html" class="btn btn-secondary">Mis datos personales</a>
             </div>
 
-            <h2 class="card-title" style="font-size:1.2rem; text-align:left;">Mis citas</h2>
-            <p class="message hidden" id="appointments-empty">Todavía no tienes citas agendadas.</p>
-            <div class="appointments-list" id="appointments-list"></div>
+            <p class="message hidden" id="appointments-error" role="status"></p>
+            <section class="patient-appointment-group">
+                <h2 class="card-title patient-appointment-heading">Citas actuales</h2>
+                <p class="message hidden" id="current-appointments-empty">No tienes citas pendientes o aceptadas para hoy o fechas futuras.</p>
+                <div class="appointments-list" id="appointments-list"></div>
+            </section>
+            <section class="patient-appointment-group">
+                <h2 class="card-title patient-appointment-heading">Citas pasadas</h2>
+                <p class="message hidden" id="past-appointments-empty">Todavía no hay citas en tu historial.</p>
+                <div class="appointments-list" id="past-appointments-list"></div>
+            </section>
         </section>
     </main>
 

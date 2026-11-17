@@ -18,6 +18,8 @@ namespace SanitasFlow.Api.Models
         public DateTime? CanceladaEnUtc { get; set; }
         public int? PorcentajeReembolso { get; set; }
         public decimal? MontoReembolso { get; set; }
+        public bool ReasignacionUrgente { get; set; }
+        public string? AvisoReasignacion { get; set; }
         public DateTime CreadaEnUtc { get; set; } = DateTime.UtcNow;
         public Paciente Paciente { get; set; } = null!;
         public Medico? Medico { get; set; }

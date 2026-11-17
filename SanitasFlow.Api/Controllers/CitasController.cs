@@ -72,7 +72,17 @@ public class CitasController(AppDbContext context, CitaService citaService, Canc
 
         try
         {
-            return Ok(await cancellationPolicy.CancelAsync(cita, request.MotivoCancelacion, request.DeseaReagendar, cancellationToken));
+            var result = await cancellationPolicy.CancelAsync(cita, request.MotivoCancelacion, request.DeseaReagendar, cancellationToken);
+            var patient = await context.Pacientes.AsNoTracking().SingleAsync(p => p.Id == pacienteId, cancellationToken);
+            context.MovimientosPersonal.Add(new MovimientoPersonal
+            {
+                ActorRol = "Paciente", ActorId = patient.Id, ActorUsuario = patient.NombreUsuario,
+                ActorNombre = $"{patient.Nombres} {patient.ApellidoPaterno} {patient.ApellidoMaterno}".Trim(),
+                Accion = "Canceló cita", DestinoTipo = "Cita", DestinoId = cita.Id, DestinoNombre = $"Cita #{cita.Id}",
+                Detalle = $"Motivo: {cita.MotivoCancelacion}. Reembolso: {result.PorcentajeReembolso}%.", FechaUtc = DateTime.UtcNow
+            });
+            await context.SaveChangesAsync(cancellationToken);
+            return Ok(result);
         }
         catch (InvalidOperationException ex)
         {
@@ -92,6 +102,15 @@ public class CitasController(AppDbContext context, CitaService citaService, Canc
             var cita = await citaService.CrearCitaAsync(pacienteId, request.EspecialidadId, request.ProcedimientoId, fecha, request.InicioMin, request.Motivo ?? string.Empty, cancellationToken);
             var response = await context.Citas.AsNoTracking().Include(c => c.Especialidad).Include(c => c.Procedimiento)
                 .SingleAsync(c => c.Id == cita.Id, cancellationToken);
+            var patient = await context.Pacientes.AsNoTracking().SingleAsync(p => p.Id == pacienteId, cancellationToken);
+            context.MovimientosPersonal.Add(new MovimientoPersonal
+            {
+                ActorRol = "Paciente", ActorId = patient.Id, ActorUsuario = patient.NombreUsuario,
+                ActorNombre = $"{patient.Nombres} {patient.ApellidoPaterno} {patient.ApellidoMaterno}".Trim(),
+                Accion = "Agendó cita", DestinoTipo = "Cita", DestinoId = cita.Id, DestinoNombre = $"Cita #{cita.Id}",
+                Detalle = $"{response.Especialidad.Nombre} · {response.Procedimiento.Nombre} · {response.Fecha} {response.InicioMin}.", FechaUtc = DateTime.UtcNow
+            });
+            await context.SaveChangesAsync(cancellationToken);
             return CreatedAtAction(nameof(GetById), new { id = cita.Id }, ToResponse(response));
         }
         catch (InvalidOperationException ex)

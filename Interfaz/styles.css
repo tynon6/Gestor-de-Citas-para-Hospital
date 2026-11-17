@@ -725,6 +725,9 @@ textarea:focus {
     gap: 14px;
 }
 
+.patient-appointment-group { margin-top: 28px; }
+.patient-appointment-heading { margin: 0 0 14px; padding-bottom: 10px; border-bottom: 2px solid var(--line); text-align: left; }
+
 .appointment-card {
     border: 1px solid var(--line);
     border-radius: var(--radius);
@@ -832,4 +835,85 @@ textarea:focus {
     .donation-content { align-items: stretch; flex-direction: column; }
     .policy-list { grid-template-columns: 1fr; }
     .donation-actions { align-items: stretch; flex-direction: column; }
+}
+.urgent-appointment-notice {
+    margin: 12px 0 0;
+    padding: 11px 14px;
+    border-left: 4px solid #d79519;
+    border-radius: 8px;
+    color: #654500;
+    background: #fff5dc;
+    font-weight: 700;
+}
+
+.centered-note { text-align: center; margin: 20px 0 0; }
+
+.master-section {
+    margin: 18px 0;
+    overflow: hidden;
+    border: 1px solid #c8daf2;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 10px 26px rgba(20, 52, 93, .06);
+}
+
+.master-section > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 24px;
+    color: #123567;
+    cursor: pointer;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(1.2rem, 2vw, 1.55rem);
+    font-weight: 700;
+    list-style: none;
+}
+
+.master-section > summary::-webkit-details-marker,
+.master-item > summary::-webkit-details-marker { display: none; }
+
+.master-section > summary::before {
+    content: "+";
+    order: 2;
+    color: #2b8fdf;
+    font-family: Arial, sans-serif;
+    font-size: 1.5rem;
+}
+
+.master-section[open] > summary::before { content: "−"; }
+.master-section-count { margin-left: auto; order: 1; color: #56749b; font: 600 .95rem Arial, sans-serif; }
+.master-section .staff-list-panel { margin: 0; padding: 0 20px 20px; border: 0; box-shadow: none; }
+.master-card-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 12px; }
+
+.master-item {
+    align-self: start;
+    min-width: 0;
+    border: 1px solid #d5e2f2;
+    border-radius: 12px;
+    background: #fbfdff;
+}
+
+.master-item > summary {
+    display: grid;
+    gap: 5px;
+    padding: 15px 17px;
+    color: #123567;
+    cursor: pointer;
+    list-style: none;
+}
+
+.master-item > summary strong { font-size: 1rem; }
+.master-item-preview { overflow: hidden; color: #5b7392; font-size: .92rem; text-overflow: ellipsis; white-space: nowrap; }
+.master-item[open] > summary { border-bottom: 1px solid #d5e2f2; background: #f0f6fd; }
+.master-item-body { padding: 10px 17px 16px; color: #506d91; }
+.master-item-body p { margin: 7px 0; line-height: 1.5; overflow-wrap: anywhere; }
+.master-item-body .actions { margin-top: 14px; }
+.master-item > .btn { margin: 0 17px 16px; }
+
+@media (max-width: 640px) {
+    .master-section > summary { padding: 17px; }
+    .master-section .staff-list-panel { padding: 0 12px 12px; }
+    .master-card-list { grid-template-columns: 1fr; }
 }

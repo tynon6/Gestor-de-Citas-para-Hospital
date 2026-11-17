@@ -28,7 +28,7 @@ namespace SanitasFlow.Api.Services
         public async Task<List<int>> ObtenerHorariosDisponiblesAsync(string especialidadId, string procedimientoId, DateOnly fecha, CancellationToken cancellationToken)
         {
             var procedimiento = await ObtenerProcedimientoAsync(especialidadId, procedimientoId, cancellationToken);
-            var doctors = await _context.Medicos.AsNoTracking()
+            var doctors = await _context.Medicos.AsNoTracking().Where(m => m.Activo)
                 .Where(m => m.EspecialidadId == especialidadId).Select(m => m.Id).ToListAsync(cancellationToken);
             if (doctors.Count == 0) return [];
             var occupied = await ObtenerCitasOcupadasAsync(especialidadId, fecha, cancellationToken);
@@ -51,7 +51,7 @@ namespace SanitasFlow.Api.Services
             var procedimiento = await ObtenerProcedimientoAsync(especialidadId, procedimientoId, cancellationToken);
             var finMin = inicioMin + procedimiento.DuracionMin;
 
-            var doctors = await _context.Medicos
+            var doctors = await _context.Medicos.Where(m => m.Activo)
                 .Where(m => m.EspecialidadId == especialidadId).ToListAsync(cancellationToken);
             var occupied = await ObtenerCitasOcupadasAsync(especialidadId, fecha, cancellationToken);
             var availableDoctors = doctors.Where(doctor => occupied.Where(c => c.MedicoId == doctor.Id)
